@@ -1,0 +1,2411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Automotive Inventory Visibility and Tracking System</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0f172a;--sidebar:#1e293b;--card:#1e293b;--card2:#273548;
+  --border:#334155;--accent:#3b82f6;--accent2:#06b6d4;--success:#22c55e;
+  --warning:#f59e0b;--danger:#ef4444;--text:#f1f5f9;--text2:#94a3b8;
+  --input:#0f172a;--radius:8px;--shadow:0 4px 24px rgba(0,0,0,.4);
+}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow:hidden}
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 100%)}
+.login-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:40px;width:400px;box-shadow:var(--shadow)}
+.login-logo{text-align:center;margin-bottom:24px}
+.login-logo .icon{font-size:48px;display:block;margin-bottom:8px}
+.login-logo h1{font-size:20px;font-weight:700;color:var(--accent);line-height:1.3}
+.login-logo p{font-size:12px;color:var(--text2);margin-top:4px}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:13px;color:var(--text2);margin-bottom:6px;font-weight:500}
+.form-group input,.form-group select{width:100%;padding:10px 12px;background:var(--input);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:14px;outline:none;transition:border .2s}
+.form-group input:focus,.form-group select:focus{border-color:var(--accent)}
+.form-group select option{background:var(--card)}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border:none;border-radius:var(--radius);font-size:13px;font-weight:600;cursor:pointer;transition:opacity .2s,transform .1s}
+.btn:hover{opacity:.88}.btn:active{transform:scale(.98)}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-success{background:var(--success);color:#fff}
+.btn-warning{background:var(--warning);color:#000}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-secondary{background:var(--card2);color:var(--text);border:1px solid var(--border)}
+.btn-sm{padding:6px 12px;font-size:12px}
+.btn-full{width:100%;justify-content:center;padding:12px}
+#app{display:none;height:100vh;flex-direction:column}
+#app.active{display:flex}
+#app-header{background:var(--sidebar);border-bottom:1px solid var(--border);padding:0 20px;height:56px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;z-index:100}
+.header-left{display:flex;align-items:center;gap:12px}
+.header-left .app-title{font-size:15px;font-weight:700;color:var(--accent)}
+.header-left .app-subtitle{font-size:11px;color:var(--text2)}
+.header-right{display:flex;align-items:center;gap:12px}
+.user-badge{background:var(--card2);border:1px solid var(--border);border-radius:20px;padding:6px 14px;font-size:12px;display:flex;align-items:center;gap:6px}
+.user-badge .role-chip{background:var(--accent);color:#fff;border-radius:10px;padding:2px 8px;font-size:10px;font-weight:600}
+#app-body{display:flex;flex:1;overflow:hidden}
+#sidebar{width:220px;background:var(--sidebar);border-right:1px solid var(--border);overflow-y:auto;flex-shrink:0;padding:12px 0}
+.sidebar-section{padding:0 12px;margin-bottom:4px}
+.sidebar-section-title{font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;padding:8px 8px 4px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:6px;cursor:pointer;transition:background .15s;font-size:13px;color:var(--text2);user-select:none}
+.nav-item:hover{background:var(--card2);color:var(--text)}
+.nav-item.active{background:var(--accent);color:#fff}
+.nav-item .nav-icon{font-size:16px;width:20px;text-align:center;flex-shrink:0}
+.nav-item .nav-badge{margin-left:auto;background:var(--danger);color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;font-weight:700}
+#main-content{flex:1;overflow-y:auto;padding:24px;background:var(--bg)}
+.module-header{margin-bottom:24px}
+.module-header h2{font-size:22px;font-weight:700;color:var(--text)}
+.module-header p{font-size:13px;color:var(--text2);margin-top:4px}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px;margin-bottom:24px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
+.stat-card .stat-label{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.stat-card .stat-value{font-size:28px;font-weight:700}
+.stat-card .stat-sub{font-size:11px;color:var(--text2);margin-top:4px}
+.stat-card.accent .stat-value{color:var(--accent)}
+.stat-card.success .stat-value{color:var(--success)}
+.stat-card.warning .stat-value{color:var(--warning)}
+.stat-card.danger .stat-value{color:var(--danger)}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:20px}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.card-header h3{font-size:15px;font-weight:600}
+.card-actions{display:flex;gap:8px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{background:var(--card2);padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
+tbody tr{border-bottom:1px solid var(--border)}
+tbody tr:hover{background:var(--card2)}
+tbody td{padding:10px 12px;vertical-align:middle}
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600}
+.badge-success{background:rgba(34,197,94,.15);color:var(--success)}
+.badge-warning{background:rgba(245,158,11,.15);color:var(--warning)}
+.badge-danger{background:rgba(239,68,68,.15);color:var(--danger)}
+.badge-info{background:rgba(59,130,246,.15);color:var(--accent)}
+.badge-neutral{background:rgba(148,163,184,.15);color:var(--text2)}
+.badge-purple{background:rgba(168,85,247,.15);color:#a855f7}
+.form-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.form-row .form-group{flex:1;min-width:140px;margin-bottom:0}
+.filter-bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;padding:14px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius)}
+.filter-bar input,.filter-bar select{padding:7px 10px;background:var(--input);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;outline:none}
+.filter-bar input:focus,.filter-bar select:focus{border-color:var(--accent)}
+.filter-bar select option{background:var(--card)}
+.timeline{list-style:none;padding-left:20px;border-left:2px solid var(--border)}
+.timeline li{position:relative;padding:8px 0 8px 20px;font-size:13px}
+.timeline li::before{content:'';position:absolute;left:-7px;top:14px;width:12px;height:12px;border-radius:50%;background:var(--accent);border:2px solid var(--bg)}
+.timeline li .tl-time{font-size:11px;color:var(--text2)}
+.timeline li .tl-label{font-weight:600;color:var(--text)}
+.timeline li .tl-desc{color:var(--text2)}
+.progress-bar{background:var(--card2);border-radius:4px;height:8px;overflow:hidden}
+.progress-fill{height:100%;border-radius:4px;background:var(--accent);transition:width .3s}
+.bar-chart{display:flex;flex-direction:column;gap:8px}
+.bar-row{display:flex;align-items:center;gap:10px;font-size:12px}
+.bar-label{width:120px;color:var(--text2);text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-track{flex:1;background:var(--card2);border-radius:3px;height:14px;overflow:hidden}
+.bar-fill{height:100%;border-radius:3px;background:var(--accent);min-width:2px}
+.bar-value{width:40px;text-align:right;font-weight:600;font-size:11px}
+.donut-wrap{display:flex;align-items:center;gap:20px}
+.donut{width:100px;height:100px;border-radius:50%;flex-shrink:0}
+.donut-legend{font-size:12px}
+.donut-legend li{list-style:none;display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.donut-legend li span{width:10px;height:10px;border-radius:50%;display:inline-block}
+#modal-root .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:1000}
+.modal-box{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:28px;min-width:420px;max-width:600px;width:90%;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow)}
+.modal-box h3{font-size:17px;font-weight:700;margin-bottom:20px;color:var(--text)}
+.modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
+#toast-root{position:fixed;bottom:20px;right:20px;display:flex;flex-direction:column;gap:8px;z-index:2000}
+.toast{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px 16px;font-size:13px;display:flex;align-items:center;gap:10px;box-shadow:var(--shadow);animation:slideIn .2s ease;min-width:250px}
+.toast.success{border-left:4px solid var(--success)}.toast.error{border-left:4px solid var(--danger)}.toast.info{border-left:4px solid var(--accent)}.toast.warning{border-left:4px solid var(--warning)}
+@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+.empty-state{text-align:center;padding:40px;color:var(--text2)}
+.empty-state .empty-icon{font-size:40px;margin-bottom:12px}
+.alert-item{border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:10px;display:flex;align-items:flex-start;gap:12px}
+.alert-item.critical{border-left:4px solid var(--danger)}.alert-item.warning{border-left:4px solid var(--warning)}.alert-item.info{border-left:4px solid var(--accent)}
+.alert-icon{font-size:20px;flex-shrink:0}
+.alert-body .alert-title{font-weight:600;font-size:14px}
+.alert-body .alert-desc{font-size:12px;color:var(--text2);margin-top:2px}
+.alert-body .alert-meta{font-size:11px;color:var(--text2);margin-top:4px}
+.vehicle-card{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:10px}
+.vehicle-card .vc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.vehicle-card .vc-vin{font-size:11px;color:var(--text2);font-family:monospace}
+.vehicle-card .vc-model{font-weight:700;font-size:15px}
+.vehicle-card .vc-details{display:flex;gap:16px;font-size:12px;color:var(--text2)}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.tag{display:inline-block;padding:2px 7px;border-radius:4px;font-size:11px;background:var(--card2);border:1px solid var(--border);color:var(--text2);margin:1px}
+.divider{border:none;border-top:1px solid var(--border);margin:16px 0}
+</style>
+</head>
+<body>
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">
+      <span class="icon">🚗</span>
+      <h1>Automotive Inventory Visibility<br>and Tracking System</h1>
+      <p>AIVTS v1.0 &mdash; Standalone Edition</p>
+    </div>
+    <div class="form-group">
+      <label>Select User Account</label>
+      <select id="login-user">
+        <option value="admin">Administrator (Full Access)</option>
+        <option value="manager">Operations Manager</option>
+        <option value="warehouse">Warehouse Executive</option>
+        <option value="analyst">Data Analyst</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="login-password" value="password" placeholder="Enter password">
+      <div style="font-size:11px;color:var(--text2);margin-top:4px">Demo password: <strong>password</strong></div>
+    </div>
+    <button class="btn btn-primary btn-full" onclick="doLogin()">Sign In</button>
+    <p style="text-align:center;font-size:11px;color:var(--text2);margin-top:16px">All data is stored locally in your browser.<br>No internet connection required.</p>
+  </div>
+</div>
+
+<div id="app">
+  <div id="app-header">
+    <div class="header-left">
+      <span style="font-size:24px">🚗</span>
+      <div>
+        <div class="app-title">Automotive Inventory Visibility and Tracking System</div>
+        <div class="app-subtitle">Standalone Edition — All data stored locally</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div id="current-time" style="font-size:12px;color:var(--text2)"></div>
+      <div class="user-badge">
+        <span>👤</span>
+        <span id="header-user">User</span>
+        <span id="header-role" class="role-chip">Role</span>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+  <div id="app-body">
+    <div id="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Main</div>
+        <div class="nav-item active" data-module="dashboard" onclick="setModule('dashboard')">
+          <span class="nav-icon">📊</span>Inventory Dashboard
+        </div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Tracking</div>
+        <div class="nav-item" data-module="vehicle" onclick="setModule('vehicle')">
+          <span class="nav-icon">🚙</span>Vehicle Tracking
+        </div>
+        <div class="nav-item" data-module="parts" onclick="setModule('parts')">
+          <span class="nav-icon">🔧</span>Spare Parts Inventory
+        </div>
+        <div class="nav-item" data-module="transit" onclick="setModule('transit')">
+          <span class="nav-icon">🚚</span>Transit Tracking
+        </div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Operations</div>
+        <div class="nav-item" data-module="audit" onclick="setModule('audit')">
+          <span class="nav-icon">📋</span>Stock Audit
+        </div>
+        <div class="nav-item" data-module="reorder" onclick="setModule('reorder')">
+          <span class="nav-icon">🔄</span>Reorder Management
+        </div>
+        <div class="nav-item" data-module="aging" onclick="setModule('aging')">
+          <span class="nav-icon">⏳</span>Aging Inventory
+        </div>
+        <div class="nav-item" data-module="damage" onclick="setModule('damage')">
+          <span class="nav-icon">⚠️</span>Damage Management
+        </div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Business</div>
+        <div class="nav-item" data-module="supplier" onclick="setModule('supplier')">
+          <span class="nav-icon">🏭</span>Supplier Management
+        </div>
+        <div class="nav-item" data-module="allocation" onclick="setModule('allocation')">
+          <span class="nav-icon">📦</span>Allocation Management
+        </div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Intelligence</div>
+        <div class="nav-item" data-module="alerts" onclick="setModule('alerts')">
+          <span class="nav-icon">🔔</span>Alerts &amp; Escalations
+          <span class="nav-badge" id="alert-badge">0</span>
+        </div>
+        <div class="nav-item" data-module="reports" onclick="setModule('reports')">
+          <span class="nav-icon">📈</span>Reports &amp; Analytics
+        </div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Admin</div>
+        <div class="nav-item" data-module="userroles" onclick="setModule('userroles')">
+          <span class="nav-icon">🔐</span>User Roles &amp; Audit Logs
+        </div>
+      </div>
+    </div>
+    <div id="main-content"></div>
+  </div>
+</div>
+<div id="modal-root"></div>
+<div id="toast-root"></div>
+
+<script>
+// ============================================================
+// DATA STORE (localStorage)
+// ============================================================
+const DB_KEY = 'aivts_db';
+function loadDB(){
+  try{ return JSON.parse(localStorage.getItem(DB_KEY)) || {}; }
+  catch(e){ return {}; }
+}
+function saveDB(db){ localStorage.setItem(DB_KEY, JSON.stringify(db)); }
+function getTable(name){ const db=loadDB(); return db[name]||[]; }
+function setTable(name,data){ const db=loadDB(); db[name]=data; saveDB(db); }
+function addRow(name,row){ const t=getTable(name); t.push(row); setTable(name,t); return row; }
+function updateRow(name,id,fields){ const t=getTable(name); const i=t.findIndex(r=>r.id===id); if(i>=0){Object.assign(t[i],fields); setTable(name,t);} }
+function deleteRow(name,id){ setTable(name,getTable(name).filter(r=>r.id!==id)); }
+function nextId(name){ const t=getTable(name); return t.length?Math.max(...t.map(r=>r.id||0))+1:1; }
+
+// ============================================================
+// AUTH & APP STATE
+// ============================================================
+const USERS = {
+  admin:{name:'Rajesh Kumar',role:'Administrator',email:'admin@aivts.local'},
+  manager:{name:'Priya Sharma',role:'Operations Manager',email:'manager@aivts.local'},
+  warehouse:{name:'Suresh Patel',role:'Warehouse Executive',email:'warehouse@aivts.local'},
+  analyst:{name:'Anita Menon',role:'Data Analyst',email:'analyst@aivts.local'}
+};
+let currentUser = null;
+let currentModule = 'dashboard';
+
+function doLogin(){
+  const u=document.getElementById('login-user').value;
+  const p=document.getElementById('login-password').value;
+  if(p!=='password'){showToast('Invalid password. Use: password','error');return;}
+  currentUser=USERS[u];
+  document.getElementById('header-user').textContent=currentUser.name;
+  document.getElementById('header-role').textContent=currentUser.role;
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').classList.add('active');
+  initSampleData();
+  setModule('dashboard');
+  startClock();
+  updateAlertBadge();
+  addAuditLog('LOGIN','Logged in successfully');
+}
+function doLogout(){
+  addAuditLog('LOGOUT','Logged out');
+  currentUser=null;
+  document.getElementById('app').classList.remove('active');
+  document.getElementById('login-screen').style.display='flex';
+}
+function startClock(){
+  function tick(){
+    const now=new Date();
+    document.getElementById('current-time').textContent=now.toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  }
+  tick(); setInterval(tick,1000);
+}
+function setModule(id){
+  currentModule=id;
+  document.querySelectorAll('.nav-item').forEach(el=>{
+    el.classList.toggle('active',el.dataset.module===id);
+  });
+  const mc=document.getElementById('main-content');
+  mc.innerHTML='<div class="empty-state"><div class="empty-icon">⏳</div><p>Loading module...</p></div>';
+  setTimeout(()=>{ MODULES[id] && MODULES[id](); },50);
+}
+function updateAlertBadge(){
+  const alerts=getTable('alerts').filter(a=>!a.resolved);
+  const badge=document.getElementById('alert-badge');
+  if(badge){badge.textContent=alerts.length; badge.style.display=alerts.length?'':'none';}
+}
+
+// ============================================================
+// UTILITY FUNCTIONS
+// ============================================================
+function showToast(msg,type='info',dur=3000){
+  const icons={info:'ℹ️',success:'✅',error:'❌',warning:'⚠️'};
+  const t=document.createElement('div');
+  t.className=`toast ${type}`;
+  t.innerHTML=`<span>${icons[type]}</span><span>${msg}</span>`;
+  document.getElementById('toast-root').appendChild(t);
+  setTimeout(()=>t.remove(),dur);
+}
+function showModal(html,onClose){
+  const root=document.getElementById('modal-root');
+  root.innerHTML=`<div class="modal-backdrop" id="modal-bd">${html}</div>`;
+  document.getElementById('modal-bd').addEventListener('click',e=>{if(e.target.id==='modal-bd'){closeModal();if(onClose)onClose();}});
+}
+function closeModal(){document.getElementById('modal-root').innerHTML='';}
+function fmtDate(d){
+  if(!d)return'—';
+  try{return new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});}
+  catch(e){return d;}
+}
+function fmtDateTime(d){
+  if(!d)return'—';
+  try{return new Date(d).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});}
+  catch(e){return d;}
+}
+function daysSince(d){
+  if(!d)return 0;
+  return Math.floor((Date.now()-new Date(d).getTime())/86400000);
+}
+function ageBadge(days){
+  if(days>180)return'<span class="badge badge-danger">'+days+' days</span>';
+  if(days>90)return'<span class="badge badge-warning">'+days+' days</span>';
+  return'<span class="badge badge-success">'+days+' days</span>';
+}
+function statusBadge(s){
+  const map={
+    'Available':'success','In Transit':'info','Sold':'neutral','Reserved':'warning',
+    'Damaged':'danger','PDI Pending':'warning','PDI Completed':'success','Allocated':'info',
+    'Invoiced':'purple','Delivered':'success','In Stock':'success','Low Stock':'warning',
+    'Out of Stock':'danger','Active':'success','Inactive':'neutral','Resolved':'success',
+    'Pending':'warning','Critical':'danger','Open':'danger','Closed':'neutral',
+    'On Time':'success','Delayed':'danger','In Transit':'info','Delivered':'success',
+    'Received':'success','Partial':'warning','Overdue':'danger','Approved':'success',
+    'Rejected':'danger','Under Review':'warning','Completed':'success','Raised':'warning',
+    'Under Repair':'info','Scrapped':'neutral','Claimed':'info','Good':'success',
+    'Poor':'danger','Average':'warning','Fulfilled':'success','Cancelled':'neutral',
+    'Processing':'info'
+  };
+  const cls=map[s]||'neutral';
+  return`<span class="badge badge-${cls}">${s}</span>`;
+}
+function addAuditLog(action,detail,extra){
+  if(!currentUser)return;
+  addRow('auditlogs',{
+    id:Date.now(),user:currentUser.name,role:currentUser.role,
+    action,detail,extra:extra||'',
+    timestamp:new Date().toISOString()
+  });
+}
+function confirm2(msg,cb){
+  showModal(`<div class="modal-box">
+    <h3>⚠️ Confirm Action</h3>
+    <p style="color:var(--text2);margin-bottom:20px">${msg}</p>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-danger" onclick="closeModal();(${cb.toString()})()">Confirm</button>
+    </div>
+  </div>`);
+}
+function makeTable(headers,rows,emptyMsg){
+  if(!rows||!rows.length) return `<div class="empty-state"><div class="empty-icon">📭</div><p>${emptyMsg||'No records found'}</p></div>`;
+  return`<div class="table-wrap"><table>
+    <thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead>
+    <tbody>${rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody>
+  </table></div>`;
+}
+
+// ============================================================
+// SAMPLE DATA INITIALIZATION
+// ============================================================
+function initSampleData(){
+  const db=loadDB();
+  if(db._initialized)return;
+
+  const now=Date.now();
+  const daysAgo=n=>new Date(now-n*86400000).toISOString();
+
+  // VEHICLES
+  setTable('vehicles',[
+    {id:1,vin:'MH01SWIFT2001',model:'Swift LXI',variant:'Petrol MT',color:'Pearl White',location:'Chennai Warehouse',status:'Available',receivedDate:daysAgo(15),price:650000,dealer:'Chennai Warehouse'},
+    {id:2,vin:'MH02BALENO2002',model:'Baleno Alpha',variant:'Petrol AT',color:'Nexa Blue',location:'Pune Plant',status:'In Transit',receivedDate:daysAgo(5),price:950000,dealer:'Delhi Showroom'},
+    {id:3,vin:'KA03BREZZA2003',model:'Brezza ZXI+',variant:'Petrol AT',color:'Sizzling Red',location:'Bangalore Yard',status:'PDI Pending',receivedDate:daysAgo(8),price:1350000,dealer:'Bangalore Yard'},
+    {id:4,vin:'TN04ERTIGA2004',model:'Ertiga ZXI',variant:'Petrol MT',color:'Auburn Red',location:'Hyderabad Dealer',status:'Available',receivedDate:daysAgo(20),price:1050000,dealer:'Hyderabad Dealer'},
+    {id:5,vin:'DL05XL62005',model:'XL6 Alpha+',variant:'Petrol AT',color:'Grandeur Grey',location:'Delhi Showroom',status:'Allocated',receivedDate:daysAgo(12),price:1450000,dealer:'Delhi Showroom'},
+    {id:6,vin:'MH06VITARA2006',model:'Grand Vitara Sigma',variant:'Mild Hybrid',color:'Splendid Silver',location:'Mumbai Showroom',status:'Available',receivedDate:daysAgo(30),price:1650000,dealer:'Mumbai Showroom'},
+    {id:7,vin:'KA07JIMNY2007',model:'Jimny Zeta',variant:'4WD MT',color:'Sizzling Red',location:'Bangalore Yard',status:'Available',receivedDate:daysAgo(45),price:1400000,dealer:'Bangalore Yard'},
+    {id:8,vin:'TN08FRONX2008',model:'Fronx Delta+',variant:'Petrol MT',color:'Splendid Silver',location:'Coimbatore Service',status:'Damaged',receivedDate:daysAgo(60),price:850000,dealer:'Coimbatore Service'},
+    {id:9,vin:'MH09SWIFT2009',model:'Swift ZXI',variant:'Petrol MT',color:'Magma Grey',location:'Mumbai Showroom',status:'Sold',receivedDate:daysAgo(90),price:750000,dealer:'Mumbai Showroom'},
+    {id:10,vin:'DL10BALENO2010',model:'Baleno Sigma',variant:'Petrol MT',color:'Pearl White',location:'Delhi Showroom',status:'Available',receivedDate:daysAgo(10),price:700000,dealer:'Delhi Showroom'},
+    {id:11,vin:'MH11BREZZA2011',model:'Brezza VXI',variant:'Petrol MT',color:'Nexa Blue',location:'Pune Plant',status:'PDI Completed',receivedDate:daysAgo(7),price:1150000,dealer:'Pune Plant'},
+    {id:12,vin:'KA12ERTIGA2012',model:'Ertiga VXI',variant:'CNG MT',color:'Pearl White',location:'Kochi Transit Hub',status:'In Transit',receivedDate:daysAgo(3),price:950000,dealer:'Hyderabad Dealer'},
+    {id:13,vin:'TN13XL62013',model:'XL6 Zeta',variant:'Petrol MT',color:'Grandeur Grey',location:'Chennai Warehouse',status:'Available',receivedDate:daysAgo(25),price:1250000,dealer:'Chennai Warehouse'},
+    {id:14,vin:'MH14VITARA2014',model:'Grand Vitara Delta',variant:'Petrol MT',color:'Pearl White',location:'Mumbai Showroom',status:'Reserved',receivedDate:daysAgo(18),price:1450000,dealer:'Mumbai Showroom'},
+    {id:15,vin:'DL15FRONX2015',model:'Fronx Alpha',variant:'Turbo AT',color:'Sizzling Red',location:'Delhi Showroom',status:'Available',receivedDate:daysAgo(5),price:1050000,dealer:'Delhi Showroom'},
+    {id:16,vin:'KA16JIMNY2016',model:'Jimny Alpha',variant:'4WD AT',color:'Kinetic Yellow',location:'Bangalore Yard',status:'Available',receivedDate:daysAgo(130),price:1600000,dealer:'Bangalore Yard'},
+    {id:17,vin:'TN17SWIFT2017',model:'Swift VXI',variant:'Petrol MT',color:'Magma Grey',location:'Chennai Warehouse',status:'Available',receivedDate:daysAgo(85),price:700000,dealer:'Chennai Warehouse'},
+    {id:18,vin:'MH18BALENO2018',model:'Baleno Delta',variant:'Petrol MT',color:'Sizzling Red',location:'Pune Plant',status:'Invoiced',receivedDate:daysAgo(2),price:820000,dealer:'Pune Plant'},
+    {id:19,vin:'DL19BREZZA2019',model:'Brezza LXI',variant:'Petrol MT',color:'Pearl White',location:'Delhi Showroom',status:'Delivered',receivedDate:daysAgo(1),price:1050000,dealer:'Delhi Showroom'},
+    {id:20,vin:'KA20VITARA2020',model:'Grand Vitara Zeta+',variant:'Mild Hybrid AT',color:'Splendid Silver',location:'Bangalore Yard',status:'Available',receivedDate:daysAgo(200),price:1850000,dealer:'Bangalore Yard'},
+  ]);
+
+  // SPARE PARTS
+  setTable('parts',[
+    {id:1,sku:'SKU-OIL-001',name:'Engine Oil Filter',category:'Engine',brand:'Maruti Genuine',location:'Chennai Warehouse',qty:45,minQty:50,unit:'Pcs',price:320,lastUpdated:daysAgo(2)},
+    {id:2,sku:'SKU-BRK-002',name:'Brake Pad Set (Front)',category:'Brakes',brand:'Maruti Genuine',location:'Pune Plant',qty:120,minQty:80,unit:'Set',price:1850,lastUpdated:daysAgo(1)},
+    {id:3,sku:'SKU-BAT-003',name:'Battery 35Ah MF',category:'Electrical',brand:'Exide',location:'Bangalore Yard',qty:18,minQty:30,unit:'Pcs',price:4500,lastUpdated:daysAgo(5)},
+    {id:4,sku:'SKU-FLT-004',name:'Air Filter Element',category:'Engine',brand:'Maruti Genuine',location:'Delhi Showroom',qty:200,minQty:100,unit:'Pcs',price:450,lastUpdated:daysAgo(3)},
+    {id:5,sku:'SKU-SPK-005',name:'Spark Plug Set (4pcs)',category:'Engine',brand:'NGK',location:'Mumbai Showroom',qty:8,minQty:40,unit:'Set',price:1200,lastUpdated:daysAgo(7)},
+    {id:6,sku:'SKU-CLT-006',name:'Clutch Plate Assembly',category:'Transmission',brand:'Maruti Genuine',location:'Hyderabad Dealer',qty:35,minQty:25,unit:'Set',price:3800,lastUpdated:daysAgo(4)},
+    {id:7,sku:'SKU-RAD-007',name:'Radiator Coolant 1L',category:'Cooling',brand:'Maruti Genuine',location:'Chennai Warehouse',qty:300,minQty:150,unit:'Bottle',price:280,lastUpdated:daysAgo(1)},
+    {id:8,sku:'SKU-TYR-008',name:'Tyre 185/65R15',category:'Tyres',brand:'MRF',location:'Pune Plant',qty:60,minQty:40,unit:'Pcs',price:4200,lastUpdated:daysAgo(6)},
+    {id:9,sku:'SKU-BLB-009',name:'Headlight Bulb H4',category:'Electrical',brand:'Philips',location:'Bangalore Yard',qty:5,minQty:20,unit:'Pcs',price:350,lastUpdated:daysAgo(10)},
+    {id:10,sku:'SKU-EXH-010',name:'Exhaust Muffler',category:'Exhaust',brand:'Maruti Genuine',location:'Coimbatore Service',qty:12,minQty:15,unit:'Pcs',price:5600,lastUpdated:daysAgo(8)},
+    {id:11,sku:'SKU-WPR-011',name:'Wiper Blade 22inch',category:'Body',brand:'Bosch',location:'Delhi Showroom',qty:95,minQty:50,unit:'Pcs',price:380,lastUpdated:daysAgo(2)},
+    {id:12,sku:'SKU-ACF-012',name:'AC Filter Cabin',category:'AC',brand:'Maruti Genuine',location:'Mumbai Showroom',qty:70,minQty:60,unit:'Pcs',price:420,lastUpdated:daysAgo(3)},
+    {id:13,sku:'SKU-SUS-013',name:'Shock Absorber Front',category:'Suspension',brand:'Gabriel',location:'Hyderabad Dealer',qty:22,minQty:20,unit:'Pcs',price:3200,lastUpdated:daysAgo(9)},
+    {id:14,sku:'SKU-POW-014',name:'Power Steering Fluid 1L',category:'Steering',brand:'Maruti Genuine',location:'Chennai Warehouse',qty:110,minQty:80,unit:'Bottle',price:220,lastUpdated:daysAgo(1)},
+    {id:15,sku:'SKU-TRX-015',name:'Transmission Oil 1L',category:'Transmission',brand:'Maruti Genuine',location:'Pune Plant',qty:85,minQty:60,unit:'Bottle',price:350,lastUpdated:daysAgo(2)},
+    {id:16,sku:'SKU-BRK-016',name:'Brake Fluid DOT4 500ml',category:'Brakes',brand:'Castrol',location:'Bangalore Yard',qty:140,minQty:100,unit:'Bottle',price:180,lastUpdated:daysAgo(3)},
+    {id:17,sku:'SKU-FUS-017',name:'Fuse Box Assembly',category:'Electrical',brand:'Maruti Genuine',location:'Delhi Showroom',qty:4,minQty:10,unit:'Pcs',price:1800,lastUpdated:daysAgo(15)},
+    {id:18,sku:'SKU-RAD-018',name:'Radiator Hose Upper',category:'Cooling',brand:'Maruti Genuine',location:'Mumbai Showroom',qty:28,minQty:20,unit:'Pcs',price:650,lastUpdated:daysAgo(4)},
+    {id:19,sku:'SKU-ENG-019',name:'Engine Mounting',category:'Engine',brand:'Maruti Genuine',location:'Hyderabad Dealer',qty:16,minQty:12,unit:'Pcs',price:2200,lastUpdated:daysAgo(6)},
+    {id:20,sku:'SKU-ALT-020',name:'Alternator Assembly',category:'Electrical',brand:'Maruti Genuine',location:'Coimbatore Service',qty:6,minQty:8,unit:'Pcs',price:9500,lastUpdated:daysAgo(20)},
+  ]);
+
+  // SUPPLIERS
+  setTable('suppliers',[
+    {id:1,name:'ABC Components Pvt Ltd',contact:'Amit Joshi',phone:'9876543210',email:'amit@abccomp.com',category:'Engine Parts',rating:'Good',onTime:92,qualityIssues:3,pendingOrders:5,location:'Pune'},
+    {id:2,name:'XYZ Auto Parts Ltd',contact:'Ravi Kumar',phone:'8765432109',email:'ravi@xyzauto.com',category:'Brakes & Suspension',rating:'Poor',onTime:71,qualityIssues:12,pendingOrders:8,location:'Delhi'},
+    {id:3,name:'Prime Auto Supplies',contact:'Sunita Rao',phone:'7654321098',email:'sunita@prime.com',category:'Electrical',rating:'Good',onTime:88,qualityIssues:5,pendingOrders:3,location:'Bangalore'},
+    {id:4,name:'Bharat Spares Co',contact:'Mahesh Nair',phone:'6543210987',email:'mahesh@bharat.com',category:'Body Parts',rating:'Average',onTime:79,qualityIssues:8,pendingOrders:6,location:'Chennai'},
+    {id:5,name:'TechDrive Solutions',contact:'Preethi Menon',phone:'5432109876',email:'preethi@techdrive.com',category:'Electronics',rating:'Good',onTime:95,qualityIssues:1,pendingOrders:2,location:'Hyderabad'},
+  ]);
+
+  // PURCHASE ORDERS
+  setTable('purchaseorders',[
+    {id:1,poNumber:'PO-2026-001',supplier:'ABC Components Pvt Ltd',item:'Engine Oil Filter',qty:500,unitPrice:300,totalValue:150000,orderDate:daysAgo(10),expectedDate:daysAgo(-5),receivedQty:500,status:'Received'},
+    {id:2,poNumber:'PO-2026-002',supplier:'XYZ Auto Parts Ltd',item:'Brake Pad Set',qty:200,unitPrice:1700,totalValue:340000,orderDate:daysAgo(15),expectedDate:daysAgo(2),receivedQty:0,status:'Overdue'},
+    {id:3,poNumber:'PO-2026-003',supplier:'Prime Auto Supplies',item:'Battery 35Ah',qty:50,unitPrice:4200,totalValue:210000,orderDate:daysAgo(7),expectedDate:daysAgo(-3),receivedQty:20,status:'Partial'},
+    {id:4,poNumber:'PO-2026-004',supplier:'Bharat Spares Co',item:'Exhaust Muffler',qty:30,unitPrice:5200,totalValue:156000,orderDate:daysAgo(5),expectedDate:daysAgo(-10),receivedQty:0,status:'Processing'},
+    {id:5,poNumber:'PO-2026-005',supplier:'TechDrive Solutions',item:'Fuse Box Assembly',qty:20,unitPrice:1700,totalValue:34000,orderDate:daysAgo(3),expectedDate:daysAgo(-7),receivedQty:0,status:'Processing'},
+  ]);
+
+  // TRANSIT SHIPMENTS
+  setTable('shipments',[
+    {id:1,shipmentId:'SHIP-001',type:'Vehicle',description:'5 Units - Baleno Alpha',from:'Pune Plant',to:'Delhi Showroom',transporter:'Shree Logistics',dispatchDate:daysAgo(5),expectedDate:daysAgo(-2),status:'In Transit',vins:'MH02BALENO2002',currentLocation:'Nagpur Highway'},
+    {id:2,shipmentId:'SHIP-002',type:'Vehicle',description:'2 Units - Ertiga',from:'Pune Plant',to:'Hyderabad Dealer',transporter:'Kumar Transport',dispatchDate:daysAgo(3),expectedDate:daysAgo(-1),status:'Delayed',vins:'KA12ERTIGA2012',currentLocation:'Solapur Toll'},
+    {id:3,shipmentId:'SHIP-003',type:'Parts',description:'Battery 35Ah x20',from:'Prime Auto Supplies',to:'Bangalore Yard',transporter:'Blue Dart',dispatchDate:daysAgo(2),expectedDate:daysAgo(-4),status:'In Transit',vins:'',currentLocation:'Mumbai Depot'},
+    {id:4,shipmentId:'SHIP-004',type:'Vehicle',description:'3 Units - Jimny',from:'Gurugram Plant',to:'Bangalore Yard',transporter:'Shree Logistics',dispatchDate:daysAgo(10),expectedDate:daysAgo(-2),status:'Delivered',vins:'',currentLocation:'Bangalore Yard'},
+  ]);
+
+  // STOCK AUDITS
+  setTable('audits',[
+    {id:1,auditId:'AUD-001',location:'Chennai Warehouse',auditor:'Suresh Patel',auditDate:daysAgo(7),status:'Completed',itemsAudited:45,mismatches:3,notes:'Minor discrepancies found in Engine parts section'},
+    {id:2,auditId:'AUD-002',location:'Bangalore Yard',auditor:'Suresh Patel',auditDate:daysAgo(2),status:'In Progress',itemsAudited:20,mismatches:0,notes:'Ongoing — Vehicle section pending'},
+  ]);
+
+  setTable('auditItems',[
+    {id:1,auditId:'AUD-001',sku:'SKU-OIL-001',name:'Engine Oil Filter',systemQty:53,physicalQty:45,difference:-8,status:'Mismatch',action:'Investigation Required'},
+    {id:2,auditId:'AUD-001',sku:'SKU-BRK-002',name:'Brake Pad Set',systemQty:120,physicalQty:120,difference:0,status:'Match',action:'None'},
+    {id:3,auditId:'AUD-001',sku:'SKU-BAT-003',name:'Battery 35Ah',systemQty:19,physicalQty:18,difference:-1,status:'Mismatch',action:'Location Verification'},
+  ]);
+
+  // DAMAGE REPORTS
+  setTable('damages',[
+    {id:1,damageId:'DMG-001',type:'Vehicle',itemRef:'TN08FRONX2008',itemName:'Fronx Delta+',location:'Coimbatore Service',damageType:'Front bumper scratch + headlight crack',detectedDate:daysAgo(10),detectedBy:'Warehouse Executive',responsible:'Transport Vendor',status:'Under Repair',insuranceClaim:'Raised',repairCost:25000,notes:'Claim submitted to National Insurance'},
+    {id:2,damageId:'DMG-002',type:'Parts',itemRef:'SKU-RAD-007',itemName:'Radiator Coolant',location:'Chennai Warehouse',damageType:'Packaging damaged — leakage',detectedDate:daysAgo(5),detectedBy:'Suresh Patel',responsible:'Supplier',status:'Scrapped',insuranceClaim:'Not Required',repairCost:0,notes:'12 bottles scrapped. Supplier notified'},
+    {id:3,damageId:'DMG-003',type:'Vehicle',itemRef:'KA07JIMNY2007',itemName:'Jimny Zeta',location:'Bangalore Yard',damageType:'Minor dent on left door',detectedDate:daysAgo(3),detectedBy:'Anita Menon',responsible:'Yard Staff',status:'Under Review',insuranceClaim:'Not Required',repairCost:8000,notes:'PDI pending clearance'},
+  ]);
+
+  // ALLOCATIONS
+  setTable('allocations',[
+    {id:1,allocationId:'ALO-001',vin:'DL05XL62005',model:'XL6 Alpha+',color:'Grandeur Grey',bookingId:'BKG-1023',customerName:'Vikram Singh',dealer:'Delhi Showroom',bookingDate:daysAgo(20),allocationDate:daysAgo(5),paymentStatus:'Full Payment',status:'Fulfilled',notes:'Priority customer'},
+    {id:2,allocationId:'ALO-002',vin:'MH14VITARA2014',model:'Grand Vitara Delta',color:'Pearl White',bookingId:'BKG-1024',customerName:'Kavitha Nair',dealer:'Mumbai Showroom',bookingDate:daysAgo(15),allocationDate:daysAgo(3),paymentStatus:'50% Advance',status:'Processing',notes:''},
+    {id:3,allocationId:'ALO-003',vin:'',model:'Baleno Alpha',color:'Nexa Blue',bookingId:'BKG-1025',customerName:'Arjun Mehta',dealer:'Delhi Showroom',bookingDate:daysAgo(10),allocationDate:'',paymentStatus:'Full Payment',status:'Pending',notes:'Vehicle in transit'},
+    {id:4,allocationId:'ALO-004',vin:'TN04ERTIGA2004',model:'Ertiga ZXI',color:'Auburn Red',bookingId:'BKG-1026',customerName:'Deepa Krishnan',dealer:'Hyderabad Dealer',bookingDate:daysAgo(8),allocationDate:'',paymentStatus:'Full Payment',status:'Pending',notes:'Awaiting dealer confirmation'},
+    {id:5,allocationId:'ALO-005',vin:'',model:'Brezza ZXI+',color:'Sizzling Red',bookingId:'BKG-1027',customerName:'Rohit Bansal',dealer:'Bangalore Yard',bookingDate:daysAgo(5),allocationDate:'',paymentStatus:'Token Amount',status:'Pending',notes:'Customer confirmed'},
+  ]);
+
+  // ALERTS
+  setTable('alerts',[
+    {id:1,type:'critical',title:'Vehicles stuck in PDI > 48 hours',description:'3 vehicles at Bangalore Yard have PDI pending for more than 48 hours.',module:'vehicle',escalatedTo:'Operations Manager',createdAt:daysAgo(2),resolved:false},
+    {id:2,type:'warning',title:'Low Stock: Engine Oil Filter',description:'SKU-OIL-001 is below minimum stock level (45 / 50 min).',module:'parts',escalatedTo:'Warehouse Executive',createdAt:daysAgo(1),resolved:false},
+    {id:3,type:'critical',title:'Shipment SHIP-002 Delayed',description:'Vehicle shipment from Pune to Hyderabad is delayed at Solapur Toll for 6+ hours.',module:'transit',escalatedTo:'Operations Manager',createdAt:daysAgo(1),resolved:false},
+    {id:4,type:'warning',title:'Low Stock: Spark Plug Set',description:'SKU-SPK-005 is critically below minimum stock (8 / 40 min).',module:'parts',escalatedTo:'Warehouse Executive',createdAt:daysAgo(3),resolved:false},
+    {id:5,type:'warning',title:'PO-2026-002 Overdue',description:'Purchase Order from XYZ Auto Parts Ltd for Brake Pads is 2 days overdue.',module:'supplier',escalatedTo:'Procurement Manager',createdAt:daysAgo(2),resolved:false},
+    {id:6,type:'critical',title:'Aging Vehicle: Grand Vitara (200 days)',description:'KA20VITARA2020 has been in inventory for 200 days. Immediate action required.',module:'aging',escalatedTo:'Regional Manager',createdAt:daysAgo(1),resolved:false},
+    {id:7,type:'info',title:'Stock Audit AUD-002 in progress',description:'Bangalore Yard audit is ongoing. 20 items verified so far.',module:'audit',escalatedTo:'',createdAt:daysAgo(2),resolved:false},
+    {id:8,type:'warning',title:'Low Stock: Battery',description:'SKU-BAT-003 stock at 18, minimum required 30.',module:'parts',escalatedTo:'Warehouse Executive',createdAt:daysAgo(0),resolved:false},
+    {id:9,type:'info',title:'New Allocation pending approval',description:'Booking BKG-1024 awaiting vehicle allocation confirmation.',module:'allocation',escalatedTo:'',createdAt:daysAgo(1),resolved:false},
+    {id:10,type:'warning',title:'Damage Report DMG-003 pending review',description:'Jimny Zeta damage at Bangalore Yard pending review and decision.',module:'damage',escalatedTo:'Operations Manager',createdAt:daysAgo(3),resolved:false},
+  ]);
+
+  // VEHICLE TIMELINE EVENTS
+  setTable('vtimelines',[
+    {id:1,vin:'MH02BALENO2002',event:'Manufactured',location:'Gurugram Plant',timestamp:daysAgo(30),by:'Plant System',notes:''},
+    {id:2,vin:'MH02BALENO2002',event:'Quality Checked',location:'Gurugram Plant',timestamp:daysAgo(28),by:'QC Team',notes:'Passed all checks'},
+    {id:3,vin:'MH02BALENO2002',event:'Dispatched',location:'Gurugram Plant',timestamp:daysAgo(5),by:'Dispatch Team',notes:'Truck No: HR55XX9090'},
+    {id:4,vin:'TN08FRONX2008',event:'Manufactured',location:'Gurugram Plant',timestamp:daysAgo(75),by:'Plant System',notes:''},
+    {id:5,vin:'TN08FRONX2008',event:'Quality Checked',location:'Gurugram Plant',timestamp:daysAgo(73),by:'QC Team',notes:''},
+    {id:6,vin:'TN08FRONX2008',event:'Dispatched',location:'Gurugram Plant',timestamp:daysAgo(65),by:'Dispatch Team',notes:''},
+    {id:7,vin:'TN08FRONX2008',event:'Received at Yard',location:'Coimbatore Service',timestamp:daysAgo(60),by:'Suresh Patel',notes:'Damage found on arrival'},
+    {id:8,vin:'TN08FRONX2008',event:'Damage Reported',location:'Coimbatore Service',timestamp:daysAgo(60),by:'Suresh Patel',notes:'DMG-001 raised'},
+  ]);
+
+  // AUDIT LOGS (system)
+  setTable('auditlogs',[
+    {id:1,user:'Rajesh Kumar',role:'Administrator',action:'INIT',detail:'System initialized with sample data',extra:'',timestamp:new Date().toISOString()},
+  ]);
+
+  const db2=loadDB();
+  db2._initialized=true;
+  saveDB(db2);
+}
+</script>
+
+<script>
+// ============================================================
+// MODULE: INVENTORY DASHBOARD
+// ============================================================
+function renderDashboard(){
+  const vehicles = getTable('vehicles');
+  const parts = getTable('parts');
+  const alerts = getTable('alerts').filter(a=>!a.resolved);
+  const shipments = getTable('shipments');
+  const damages = getTable('damages');
+
+  const vByStatus = {};
+  vehicles.forEach(v=>{ vByStatus[v.status]=(vByStatus[v.status]||0)+1; });
+  const lowParts = parts.filter(p=>p.qty<p.minQty).length;
+  const inTransit = shipments.filter(s=>s.status==='In Transit'||s.status==='Delayed').length;
+  const locations = [...new Set(vehicles.map(v=>v.location))];
+  const locData = locations.map(l=>({loc:l,count:vehicles.filter(v=>v.location===l).length})).sort((a,b)=>b.count-a.count);
+  const maxLoc = locData.length?Math.max(...locData.map(d=>d.count)):1;
+
+  const html = `
+  <div class="module-header">
+    <h2>📊 Inventory Dashboard</h2>
+    <p>Real-time stock visibility across all locations and categories</p>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card accent"><div class="stat-label">Total Vehicles</div><div class="stat-value">${vehicles.length}</div><div class="stat-sub">Across all locations</div></div>
+    <div class="stat-card success"><div class="stat-label">Available</div><div class="stat-value">${vByStatus['Available']||0}</div><div class="stat-sub">Ready for allocation</div></div>
+    <div class="stat-card info"><div class="stat-label">In Transit</div><div class="stat-value">${(vByStatus['In Transit']||0)}</div><div class="stat-sub">Moving to destinations</div></div>
+    <div class="stat-card warning"><div class="stat-label">PDI Pending</div><div class="stat-value">${vByStatus['PDI Pending']||0}</div><div class="stat-sub">Pre-delivery inspection</div></div>
+    <div class="stat-card danger"><div class="stat-label">Damaged</div><div class="stat-value">${vByStatus['Damaged']||0}</div><div class="stat-sub">Require attention</div></div>
+    <div class="stat-card warning"><div class="stat-label">Low Stock Parts</div><div class="stat-value">${lowParts}</div><div class="stat-sub">Below minimum level</div></div>
+    <div class="stat-card info"><div class="stat-label">Active Shipments</div><div class="stat-value">${inTransit}</div><div class="stat-sub">En route now</div></div>
+    <div class="stat-card danger"><div class="stat-label">Open Alerts</div><div class="stat-value">${alerts.length}</div><div class="stat-sub">Require action</div></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header"><h3>🚗 Vehicle Status Breakdown</h3></div>
+      <div class="bar-chart">
+        ${Object.entries(vByStatus).map(([s,c])=>`
+          <div class="bar-row">
+            <div class="bar-label">${s}</div>
+            <div class="bar-track"><div class="bar-fill" style="width:${Math.round(c/vehicles.length*100)}%;background:${s==='Available'?'var(--success)':s==='Damaged'?'var(--danger)':s==='In Transit'?'var(--accent)':'var(--warning)'}"></div></div>
+            <div class="bar-value">${c}</div>
+          </div>`).join('')}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><h3>📍 Stock by Location</h3></div>
+      <div class="bar-chart">
+        ${locData.map(d=>`
+          <div class="bar-row">
+            <div class="bar-label">${d.loc}</div>
+            <div class="bar-track"><div class="bar-fill" style="width:${Math.round(d.count/maxLoc*100)}%"></div></div>
+            <div class="bar-value">${d.count}</div>
+          </div>`).join('')}
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header"><h3>⚠️ Recent Alerts</h3><a href="#" onclick="setModule('alerts')" style="font-size:12px;color:var(--accent)">View All</a></div>
+      ${alerts.slice(0,5).map(a=>`
+        <div class="alert-item ${a.type}">
+          <div class="alert-icon">${a.type==='critical'?'🚨':a.type==='warning'?'⚠️':'ℹ️'}</div>
+          <div class="alert-body">
+            <div class="alert-title">${a.title}</div>
+            <div class="alert-desc">${a.description}</div>
+          </div>
+        </div>`).join('')}
+    </div>
+    <div class="card">
+      <div class="card-header"><h3>🔧 Spare Parts Overview</h3><a href="#" onclick="setModule('parts')" style="font-size:12px;color:var(--accent)">Manage</a></div>
+      <div class="stats-grid" style="grid-template-columns:1fr 1fr;gap:12px;margin-bottom:0">
+        <div class="stat-card success"><div class="stat-label">Total SKUs</div><div class="stat-value" style="font-size:22px">${parts.length}</div></div>
+        <div class="stat-card warning"><div class="stat-label">Low Stock</div><div class="stat-value" style="font-size:22px">${lowParts}</div></div>
+        <div class="stat-card danger"><div class="stat-label">Out of Stock</div><div class="stat-value" style="font-size:22px">${parts.filter(p=>p.qty===0).length}</div></div>
+        <div class="stat-card accent"><div class="stat-label">Total Value</div><div class="stat-value" style="font-size:16px">₹${(parts.reduce((s,p)=>s+p.qty*p.price,0)/100000).toFixed(1)}L</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><h3>🚗 Recent Vehicle Activity</h3><button class="btn btn-primary btn-sm" onclick="setModule('vehicle')">View All Vehicles</button></div>
+    ${makeTable(
+      ['VIN','Model','Variant','Color','Location','Status','Received'],
+      vehicles.slice(0,8).map(v=>[
+        `<code style="font-size:11px">${v.vin}</code>`,v.model,v.variant,v.color,v.location,statusBadge(v.status),fmtDate(v.receivedDate)
+      ])
+    )}
+  </div>`;
+
+  document.getElementById('main-content').innerHTML = html;
+}
+
+// ============================================================
+// MODULE: VEHICLE TRACKING
+// ============================================================
+function renderVehicle(){
+  const vehicles = getTable('vehicles');
+  let filterStatus = '', filterLoc = '', filterSearch = '';
+  const locations = [...new Set(vehicles.map(v=>v.location))];
+  const statuses = [...new Set(vehicles.map(v=>v.status))];
+
+  function render(){
+    let data = vehicles;
+    if(filterStatus) data=data.filter(v=>v.status===filterStatus);
+    if(filterLoc) data=data.filter(v=>v.location===filterLoc);
+    if(filterSearch){ const q=filterSearch.toLowerCase(); data=data.filter(v=>v.vin.toLowerCase().includes(q)||v.model.toLowerCase().includes(q)||v.color.toLowerCase().includes(q)); }
+
+    document.getElementById('vt-table').innerHTML = makeTable(
+      ['VIN','Model','Variant','Color','Location','Status','Received','Age','Actions'],
+      data.map(v=>[
+        `<code style="font-size:11px">${v.vin}</code>`,v.model,v.variant,v.color,v.location,
+        statusBadge(v.status),fmtDate(v.receivedDate),ageBadge(daysSince(v.receivedDate)),
+        `<div style="display:flex;gap:4px">
+          <button class="btn btn-secondary btn-sm" onclick="viewVehicleTimeline('${v.vin}')">Timeline</button>
+          <button class="btn btn-primary btn-sm" onclick="editVehicleStatus(${v.id})">Update</button>
+        </div>`
+      ]),
+      'No vehicles found'
+    );
+  }
+
+  const html = `
+  <div class="module-header">
+    <h2>🚙 Vehicle Tracking</h2>
+    <p>VIN-level vehicle movement and lifecycle tracking</p>
+  </div>
+  <div class="filter-bar">
+    <input id="vt-search" placeholder="🔍 Search VIN, model, color..." style="flex:2;min-width:200px" oninput="filterSearch=this.value;render()">
+    <select id="vt-status" onchange="filterStatus=this.value;render()">
+      <option value="">All Statuses</option>
+      ${statuses.map(s=>`<option>${s}</option>`).join('')}
+    </select>
+    <select id="vt-loc" onchange="filterLoc=this.value;render()">
+      <option value="">All Locations</option>
+      ${locations.map(l=>`<option>${l}</option>`).join('')}
+    </select>
+    <button class="btn btn-primary btn-sm" onclick="addVehicleModal()">+ Add Vehicle</button>
+    <button class="btn btn-secondary btn-sm" onclick="filterStatus='';filterLoc='';filterSearch='';document.getElementById('vt-search').value='';document.getElementById('vt-status').value='';document.getElementById('vt-loc').value='';render()">Reset</button>
+  </div>
+  <div class="card">
+    <div id="vt-table"></div>
+  </div>`;
+
+  document.getElementById('main-content').innerHTML = html;
+  // make render accessible
+  window._vtRender = render;
+  render();
+}
+
+function viewVehicleTimeline(vin){
+  const vehicles = getTable('vehicles');
+  const v = vehicles.find(x=>x.vin===vin);
+  const events = getTable('vtimelines').filter(e=>e.vin===vin);
+  if(!v){showToast('Vehicle not found','error');return;}
+  showModal(`<div class="modal-box">
+    <h3>🚗 Vehicle Timeline — ${vin}</h3>
+    <div style="margin-bottom:16px">
+      <div style="font-size:14px;font-weight:600">${v.model} ${v.variant}</div>
+      <div style="font-size:12px;color:var(--text2)">${v.color} | ${v.location} | ${statusBadge(v.status)}</div>
+    </div>
+    ${events.length?`<ul class="timeline">
+      ${events.map(e=>`<li>
+        <div class="tl-time">${fmtDateTime(e.timestamp)}</div>
+        <div class="tl-label">${e.event}</div>
+        <div class="tl-desc">📍 ${e.location} — By: ${e.by}</div>
+        ${e.notes?`<div class="tl-desc" style="color:var(--warning)">${e.notes}</div>`:''}
+      </li>`).join('')}
+    </ul>`:'<div class="empty-state"><div class="empty-icon">📭</div><p>No timeline events recorded</p></div>'}
+    <div class="modal-footer">
+      <button class="btn btn-primary btn-sm" onclick="addTimelineEvent('${vin}')">+ Add Event</button>
+      <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+    </div>
+  </div>`);
+}
+
+function addTimelineEvent(vin){
+  closeModal();
+  showModal(`<div class="modal-box">
+    <h3>➕ Add Timeline Event — ${vin}</h3>
+    <div class="form-group"><label>Event</label>
+      <select id="te-event"><option>Manufactured</option><option>Quality Checked</option><option>Dispatched</option><option>Received at Yard</option><option>PDI Started</option><option>PDI Completed</option><option>Allocated</option><option>Invoiced</option><option>Delivered</option><option>Damage Reported</option><option>Repaired</option><option>Other</option></select>
+    </div>
+    <div class="form-group"><label>Location</label><input id="te-loc" placeholder="e.g. Bangalore Yard"></div>
+    <div class="form-group"><label>Notes</label><input id="te-notes" placeholder="Optional notes"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveTimelineEvent('${vin}')">Save</button>
+    </div>
+  </div>`);
+}
+
+function saveTimelineEvent(vin){
+  const event=document.getElementById('te-event').value;
+  const loc=document.getElementById('te-loc').value;
+  const notes=document.getElementById('te-notes').value;
+  addRow('vtimelines',{id:nextId('vtimelines'),vin,event,location:loc,timestamp:new Date().toISOString(),by:currentUser.name,notes});
+  addAuditLog('ADD_TIMELINE',`Added ${event} event for VIN ${vin}`);
+  showToast('Timeline event added','success');
+  closeModal();
+}
+
+function editVehicleStatus(id){
+  const v=getTable('vehicles').find(x=>x.id===id);
+  if(!v)return;
+  showModal(`<div class="modal-box">
+    <h3>✏️ Update Vehicle — ${v.vin}</h3>
+    <div class="form-group"><label>Model</label><input id="ev-model" value="${v.model}"></div>
+    <div class="form-group"><label>Status</label>
+      <select id="ev-status">
+        ${['Available','In Transit','PDI Pending','PDI Completed','Allocated','Reserved','Invoiced','Delivered','Damaged','Sold'].map(s=>`<option ${s===v.status?'selected':''}>${s}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group"><label>Location</label><input id="ev-loc" value="${v.location}"></div>
+    <div class="form-group"><label>Dealer</label><input id="ev-dealer" value="${v.dealer}"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveVehicleStatus(${id})">Save Changes</button>
+    </div>
+  </div>`);
+}
+
+function saveVehicleStatus(id){
+  const v=getTable('vehicles').find(x=>x.id===id);
+  const oldStatus=v.status;
+  const ns=document.getElementById('ev-status').value;
+  updateRow('vehicles',id,{model:document.getElementById('ev-model').value,status:ns,location:document.getElementById('ev-loc').value,dealer:document.getElementById('ev-dealer').value});
+  addAuditLog('UPDATE_VEHICLE',`Status changed: ${oldStatus} → ${ns}`,`VIN: ${v.vin}`);
+  showToast('Vehicle updated successfully','success');
+  closeModal();
+  renderVehicle();
+}
+
+function addVehicleModal(){
+  showModal(`<div class="modal-box">
+    <h3>➕ Add New Vehicle</h3>
+    <div class="form-row">
+      <div class="form-group"><label>VIN *</label><input id="nv-vin" placeholder="e.g. MH01SWIFT9999"></div>
+      <div class="form-group"><label>Model *</label><input id="nv-model" placeholder="e.g. Swift LXI"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Variant</label><input id="nv-variant" placeholder="e.g. Petrol MT"></div>
+      <div class="form-group"><label>Color</label><input id="nv-color" placeholder="e.g. Pearl White"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Location</label><input id="nv-location" placeholder="e.g. Chennai Warehouse"></div>
+      <div class="form-group"><label>Status</label>
+        <select id="nv-status"><option>Available</option><option>In Transit</option><option>PDI Pending</option></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Price (₹)</label><input id="nv-price" type="number" placeholder="e.g. 750000"></div>
+      <div class="form-group"><label>Dealer/Destination</label><input id="nv-dealer" placeholder="e.g. Delhi Showroom"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveNewVehicle()">Add Vehicle</button>
+    </div>
+  </div>`);
+}
+
+function saveNewVehicle(){
+  const vin=document.getElementById('nv-vin').value.trim();
+  const model=document.getElementById('nv-model').value.trim();
+  if(!vin||!model){showToast('VIN and Model are required','error');return;}
+  const existing=getTable('vehicles').find(v=>v.vin===vin);
+  if(existing){showToast('VIN already exists','error');return;}
+  addRow('vehicles',{
+    id:nextId('vehicles'),vin,model,
+    variant:document.getElementById('nv-variant').value,
+    color:document.getElementById('nv-color').value,
+    location:document.getElementById('nv-location').value,
+    status:document.getElementById('nv-status').value,
+    price:parseFloat(document.getElementById('nv-price').value)||0,
+    dealer:document.getElementById('nv-dealer').value,
+    receivedDate:new Date().toISOString()
+  });
+  addAuditLog('ADD_VEHICLE',`New vehicle added: ${vin} — ${model}`);
+  showToast('Vehicle added successfully','success');
+  closeModal();
+  renderVehicle();
+}
+</script>
+
+<script>
+// ============================================================
+// MODULE: SPARE PARTS INVENTORY
+// ============================================================
+function renderParts(){
+  const parts = getTable('parts');
+  let search='', cat='', loc='';
+  const cats=[...new Set(parts.map(p=>p.category))];
+  const locs=[...new Set(parts.map(p=>p.location))];
+
+  function render(){
+    let data=parts;
+    if(search){const q=search.toLowerCase();data=data.filter(p=>p.sku.toLowerCase().includes(q)||p.name.toLowerCase().includes(q));}
+    if(cat)data=data.filter(p=>p.category===cat);
+    if(loc)data=data.filter(p=>p.location===loc);
+    document.getElementById('parts-table').innerHTML=makeTable(
+      ['SKU','Name','Category','Brand','Location','Qty','Min Qty','Status','Unit Price','Actions'],
+      data.map(p=>[
+        `<code style="font-size:11px">${p.sku}</code>`,p.name,
+        `<span class="tag">${p.category}</span>`,p.brand,p.location,
+        `<strong>${p.qty}</strong>`,p.minQty,
+        p.qty===0?statusBadge('Out of Stock'):p.qty<p.minQty?statusBadge('Low Stock'):statusBadge('In Stock'),
+        `₹${p.price.toLocaleString()}`,
+        `<div style="display:flex;gap:4px">
+          <button class="btn btn-primary btn-sm" onclick="editPart(${p.id})">Edit</button>
+          <button class="btn btn-success btn-sm" onclick="adjustStock(${p.id})">Adjust</button>
+          <button class="btn btn-danger btn-sm" onclick="deletePart(${p.id})">Delete</button>
+        </div>`
+      ]),'No parts found');
+  }
+
+  const html=`
+  <div class="module-header">
+    <h2>🔧 Spare Parts Inventory</h2>
+    <p>SKU-level spare parts tracking and stock management</p>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-card accent"><div class="stat-label">Total SKUs</div><div class="stat-value">${parts.length}</div></div>
+    <div class="stat-card warning"><div class="stat-label">Low Stock</div><div class="stat-value">${parts.filter(p=>p.qty>0&&p.qty<p.minQty).length}</div></div>
+    <div class="stat-card danger"><div class="stat-label">Out of Stock</div><div class="stat-value">${parts.filter(p=>p.qty===0).length}</div></div>
+    <div class="stat-card success"><div class="stat-label">Total Inventory Value</div><div class="stat-value" style="font-size:18px">₹${(parts.reduce((s,p)=>s+p.qty*p.price,0)/100000).toFixed(1)}L</div></div>
+  </div>
+  <div class="filter-bar">
+    <input id="parts-search" placeholder="🔍 Search SKU or name..." style="flex:2" oninput="search=this.value;render()">
+    <select onchange="cat=this.value;render()"><option value="">All Categories</option>${cats.map(c=>`<option>${c}</option>`).join('')}</select>
+    <select onchange="loc=this.value;render()"><option value="">All Locations</option>${locs.map(l=>`<option>${l}</option>`).join('')}</select>
+    <button class="btn btn-primary btn-sm" onclick="addPartModal()">+ Add Part</button>
+  </div>
+  <div class="card"><div id="parts-table"></div></div>`;
+
+  document.getElementById('main-content').innerHTML=html;
+  render();
+}
+
+function addPartModal(){
+  showModal(`<div class="modal-box">
+    <h3>➕ Add New Spare Part</h3>
+    <div class="form-row">
+      <div class="form-group"><label>SKU *</label><input id="np-sku" placeholder="e.g. SKU-BRK-021"></div>
+      <div class="form-group"><label>Name *</label><input id="np-name" placeholder="Part name"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Category</label><input id="np-cat" placeholder="e.g. Engine"></div>
+      <div class="form-group"><label>Brand</label><input id="np-brand" placeholder="e.g. Maruti Genuine"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Location</label><input id="np-loc" placeholder="e.g. Chennai Warehouse"></div>
+      <div class="form-group"><label>Unit</label><input id="np-unit" value="Pcs"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Initial Qty</label><input id="np-qty" type="number" value="0"></div>
+      <div class="form-group"><label>Min Qty</label><input id="np-min" type="number" value="10"></div>
+      <div class="form-group"><label>Unit Price (₹)</label><input id="np-price" type="number" value="0"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveNewPart()">Add Part</button>
+    </div>
+  </div>`);
+}
+
+function saveNewPart(){
+  const sku=document.getElementById('np-sku').value.trim();
+  const name=document.getElementById('np-name').value.trim();
+  if(!sku||!name){showToast('SKU and Name are required','error');return;}
+  if(getTable('parts').find(p=>p.sku===sku)){showToast('SKU already exists','error');return;}
+  addRow('parts',{
+    id:nextId('parts'),sku,name,
+    category:document.getElementById('np-cat').value,
+    brand:document.getElementById('np-brand').value,
+    location:document.getElementById('np-loc').value,
+    unit:document.getElementById('np-unit').value,
+    qty:parseInt(document.getElementById('np-qty').value)||0,
+    minQty:parseInt(document.getElementById('np-min').value)||10,
+    price:parseFloat(document.getElementById('np-price').value)||0,
+    lastUpdated:new Date().toISOString()
+  });
+  addAuditLog('ADD_PART',`New part added: ${sku} — ${name}`);
+  showToast('Part added','success');
+  closeModal();
+  renderParts();
+}
+
+function editPart(id){
+  const p=getTable('parts').find(x=>x.id===id);
+  if(!p)return;
+  showModal(`<div class="modal-box">
+    <h3>✏️ Edit Part — ${p.sku}</h3>
+    <div class="form-row">
+      <div class="form-group"><label>Name</label><input id="ep-name" value="${p.name}"></div>
+      <div class="form-group"><label>Category</label><input id="ep-cat" value="${p.category}"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Brand</label><input id="ep-brand" value="${p.brand}"></div>
+      <div class="form-group"><label>Location</label><input id="ep-loc" value="${p.location}"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Current Qty</label><input id="ep-qty" type="number" value="${p.qty}"></div>
+      <div class="form-group"><label>Min Qty</label><input id="ep-min" type="number" value="${p.minQty}"></div>
+      <div class="form-group"><label>Unit Price (₹)</label><input id="ep-price" type="number" value="${p.price}"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="savePartEdit(${id})">Save</button>
+    </div>
+  </div>`);
+}
+
+function savePartEdit(id){
+  const p=getTable('parts').find(x=>x.id===id);
+  updateRow('parts',id,{
+    name:document.getElementById('ep-name').value,
+    category:document.getElementById('ep-cat').value,
+    brand:document.getElementById('ep-brand').value,
+    location:document.getElementById('ep-loc').value,
+    qty:parseInt(document.getElementById('ep-qty').value)||0,
+    minQty:parseInt(document.getElementById('ep-min').value)||0,
+    price:parseFloat(document.getElementById('ep-price').value)||0,
+    lastUpdated:new Date().toISOString()
+  });
+  addAuditLog('UPDATE_PART',`Part updated: ${p.sku}`);
+  showToast('Part updated','success');
+  closeModal();
+  renderParts();
+}
+
+function adjustStock(id){
+  const p=getTable('parts').find(x=>x.id===id);
+  if(!p)return;
+  showModal(`<div class="modal-box">
+    <h3>📦 Adjust Stock — ${p.name}</h3>
+    <p style="color:var(--text2);margin-bottom:16px">Current Stock: <strong>${p.qty} ${p.unit}</strong></p>
+    <div class="form-group"><label>Adjustment Type</label>
+      <select id="adj-type"><option value="add">Add Stock (Inward)</option><option value="remove">Remove Stock (Outward)</option></select>
+    </div>
+    <div class="form-group"><label>Quantity</label><input id="adj-qty" type="number" min="1" value="1"></div>
+    <div class="form-group"><label>Reason</label><input id="adj-reason" placeholder="e.g. Received from supplier"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveStockAdjust(${id})">Adjust</button>
+    </div>
+  </div>`);
+}
+
+function saveStockAdjust(id){
+  const p=getTable('parts').find(x=>x.id===id);
+  const type=document.getElementById('adj-type').value;
+  const qty=parseInt(document.getElementById('adj-qty').value)||0;
+  const reason=document.getElementById('adj-reason').value;
+  const oldQty=p.qty;
+  const newQty=type==='add'?oldQty+qty:Math.max(0,oldQty-qty);
+  updateRow('parts',id,{qty:newQty,lastUpdated:new Date().toISOString()});
+  addAuditLog('STOCK_ADJUST',`${p.sku}: ${oldQty} → ${newQty} (${type})`,reason);
+  showToast(`Stock adjusted: ${oldQty} → ${newQty}`,'success');
+  closeModal();
+  renderParts();
+}
+
+function deletePart(id){
+  const p=getTable('parts').find(x=>x.id===id);
+  confirm2(`Delete part "${p.name}" (${p.sku})?`,function(){
+    deleteRow('parts',id);
+    addAuditLog('DELETE_PART',`Part deleted: ${p.sku}`);
+    showToast('Part deleted','success');
+    renderParts();
+  });
+}
+</script>
+
+<script>
+// ============================================================
+// MODULE: TRANSIT TRACKING
+// ============================================================
+function renderTransit(){
+  const shipments=getTable('shipments');
+  let sf='';
+  function render(){
+    let data=shipments;
+    if(sf)data=data.filter(s=>s.status===sf);
+    document.getElementById('transit-table').innerHTML=makeTable(
+      ['Shipment ID','Type','Description','From','To','Transporter','Dispatched','Expected','Current Location','Status','Actions'],
+      data.map(s=>[
+        `<strong>${s.shipmentId}</strong>`,
+        `<span class="tag">${s.type}</span>`,
+        s.description,s.from,s.to,s.transporter,
+        fmtDate(s.dispatchDate),fmtDate(s.expectedDate),
+        s.currentLocation||'—',statusBadge(s.status),
+        `<div style="display:flex;gap:4px">
+          <button class="btn btn-primary btn-sm" onclick="updateShipment(${s.id})">Update</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteShipment(${s.id})">Remove</button>
+        </div>`
+      ]),'No shipments found');
+  }
+
+  const html=`
+  <div class="module-header">
+    <h2>🚚 Transit Tracking</h2>
+    <p>Track vehicle and parts shipments in real-time</p>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-card accent"><div class="stat-label">Total Shipments</div><div class="stat-value">${shipments.length}</div></div>
+    <div class="stat-card info"><div class="stat-label">In Transit</div><div class="stat-value">${shipments.filter(s=>s.status==='In Transit').length}</div></div>
+    <div class="stat-card danger"><div class="stat-label">Delayed</div><div class="stat-value">${shipments.filter(s=>s.status==='Delayed').length}</div></div>
+    <div class="stat-card success"><div class="stat-label">Delivered</div><div class="stat-value">${shipments.filter(s=>s.status==='Delivered').length}</div></div>
+  </div>
+  <div class="filter-bar">
+    <select onchange="sf=this.value;render()">
+      <option value="">All Statuses</option>
+      <option>In Transit</option><option>Delayed</option><option>Delivered</option>
+    </select>
+    <button class="btn btn-primary btn-sm" onclick="addShipmentModal()">+ Add Shipment</button>
+  </div>
+  ${shipments.filter(s=>s.status==='Delayed').length?`<div class="card" style="border-left:4px solid var(--danger)">
+    <div class="card-header"><h3>🚨 Delayed Shipments — Immediate Attention</h3></div>
+    ${shipments.filter(s=>s.status==='Delayed').map(s=>`
+      <div class="alert-item critical">
+        <div class="alert-icon">🚨</div>
+        <div class="alert-body">
+          <div class="alert-title">${s.shipmentId} — ${s.description}</div>
+          <div class="alert-desc">Route: ${s.from} → ${s.to} | Transporter: ${s.transporter}</div>
+          <div class="alert-desc">Current Location: ${s.currentLocation} | Expected: ${fmtDate(s.expectedDate)}</div>
+        </div>
+        <button class="btn btn-warning btn-sm" onclick="updateShipment(${s.id})" style="flex-shrink:0">Update Status</button>
+      </div>`).join('')}
+  </div>`:''}
+  <div class="card">
+    <div class="card-header"><h3>All Shipments</h3></div>
+    <div id="transit-table"></div>
+  </div>`;
+
+  document.getElementById('main-content').innerHTML=html;
+  render();
+}
+
+function addShipmentModal(){
+  showModal(`<div class="modal-box">
+    <h3>➕ New Shipment</h3>
+    <div class="form-row">
+      <div class="form-group"><label>Type</label><select id="sh-type"><option>Vehicle</option><option>Parts</option></select></div>
+      <div class="form-group"><label>Description</label><input id="sh-desc" placeholder="e.g. 3 Units - Swift LXI"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>From</label><input id="sh-from" placeholder="Origin"></div>
+      <div class="form-group"><label>To</label><input id="sh-to" placeholder="Destination"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Transporter</label><input id="sh-trans" placeholder="Transport company"></div>
+      <div class="form-group"><label>Expected Delivery</label><input id="sh-exp" type="date"></div>
+    </div>
+    <div class="form-group"><label>VINs (if vehicle)</label><input id="sh-vins" placeholder="Comma separated VINs"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveShipment()">Create Shipment</button>
+    </div>
+  </div>`);
+}
+
+function saveShipment(){
+  const n=nextId('shipments');
+  const sid='SHIP-'+String(n).padStart(3,'0');
+  addRow('shipments',{
+    id:n,shipmentId:sid,
+    type:document.getElementById('sh-type').value,
+    description:document.getElementById('sh-desc').value,
+    from:document.getElementById('sh-from').value,
+    to:document.getElementById('sh-to').value,
+    transporter:document.getElementById('sh-trans').value,
+    dispatchDate:new Date().toISOString(),
+    expectedDate:document.getElementById('sh-exp').value?new Date(document.getElementById('sh-exp').value).toISOString():'',
+    status:'In Transit',
+    vins:document.getElementById('sh-vins').value,
+    currentLocation:document.getElementById('sh-from').value
+  });
+  addAuditLog('ADD_SHIPMENT',`Shipment ${sid} created`);
+  showToast('Shipment created','success');
+  closeModal();
+  renderTransit();
+}
+
+function updateShipment(id){
+  const s=getTable('shipments').find(x=>x.id===id);
+  if(!s)return;
+  showModal(`<div class="modal-box">
+    <h3>✏️ Update Shipment — ${s.shipmentId}</h3>
+    <div class="form-group"><label>Current Location</label><input id="us-loc" value="${s.currentLocation||''}"></div>
+    <div class="form-group"><label>Status</label>
+      <select id="us-status">
+        <option ${s.status==='In Transit'?'selected':''}>In Transit</option>
+        <option ${s.status==='Delayed'?'selected':''}>Delayed</option>
+        <option ${s.status==='Delivered'?'selected':''}>Delivered</option>
+      </select>
+    </div>
+    <div class="form-group"><label>Notes</label><input id="us-notes" placeholder="Optional update notes"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveShipmentUpdate(${id})">Update</button>
+    </div>
+  </div>`);
+}
+
+function saveShipmentUpdate(id){
+  const s=getTable('shipments').find(x=>x.id===id);
+  const ns=document.getElementById('us-status').value;
+  updateRow('shipments',id,{status:ns,currentLocation:document.getElementById('us-loc').value});
+  addAuditLog('UPDATE_SHIPMENT',`${s.shipmentId}: ${s.status} → ${ns}`,document.getElementById('us-notes').value);
+  showToast('Shipment updated','success');
+  closeModal();
+  renderTransit();
+}
+
+function deleteShipment(id){
+  const s=getTable('shipments').find(x=>x.id===id);
+  confirm2(`Remove shipment "${s.shipmentId}"?`,function(){
+    deleteRow('shipments',id);
+    addAuditLog('DELETE_SHIPMENT',`Shipment ${s.shipmentId} removed`);
+    showToast('Shipment removed','success');
+    renderTransit();
+  });
+}
+
+// ============================================================
+// MODULE: STOCK AUDIT
+// ============================================================
+function renderAudit(){
+  const audits=getTable('audits');
+  const html=`
+  <div class="module-header">
+    <h2>📋 Stock Audit</h2>
+    <p>Physical vs system stock verification and mismatch management</p>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-card accent"><div class="stat-label">Total Audits</div><div class="stat-value">${audits.length}</div></div>
+    <div class="stat-card success"><div class="stat-label">Completed</div><div class="stat-value">${audits.filter(a=>a.status==='Completed').length}</div></div>
+    <div class="stat-card warning"><div class="stat-label">In Progress</div><div class="stat-value">${audits.filter(a=>a.status==='In Progress').length}</div></div>
+    <div class="stat-card danger"><div class="stat-label">Total Mismatches</div><div class="stat-value">${audits.reduce((s,a)=>s+a.mismatches,0)}</div></div>
+  </div>
+  <div class="card">
+    <div class="card-header"><h3>Audit Records</h3><button class="btn btn-primary btn-sm" onclick="newAuditModal()">+ New Audit</button></div>
+    ${makeTable(
+      ['Audit ID','Location','Auditor','Date','Items Audited','Mismatches','Status','Notes','Actions'],
+      audits.map(a=>[
+        `<strong>${a.auditId}</strong>`,a.location,a.auditor,fmtDate(a.auditDate),a.itemsAudited,
+        `<strong style="color:${a.mismatches>0?'var(--danger)':'var(--success)'}">${a.mismatches}</strong>`,
+        statusBadge(a.status),a.notes||'—',
+        `<div style="display:flex;gap:4px">
+          <button class="btn btn-secondary btn-sm" onclick="viewAuditItems('${a.auditId}')">View Items</button>
+          <button class="btn btn-primary btn-sm" onclick="addAuditItem('${a.auditId}')">Add Item</button>
+        </div>`
+      ])
+    )}
+  </div>
+  <div class="card">
+    <div class="card-header"><h3>📊 Mismatch Report — AUD-001</h3></div>
+    ${makeTable(
+      ['SKU','Item Name','System Qty','Physical Qty','Difference','Status','Required Action'],
+      getTable('auditItems').map(i=>[
+        `<code style="font-size:11px">${i.sku}</code>`,i.name,i.systemQty,i.physicalQty,
+        `<strong style="color:${i.difference<0?'var(--danger)':i.difference>0?'var(--warning)':'var(--success)'}">${i.difference>0?'+':''}${i.difference}</strong>`,
+        statusBadge(i.status),i.action
+      ])
+    )}
+  </div>`;
+  document.getElementById('main-content').innerHTML=html;
+}
+
+function newAuditModal(){
+  showModal(`<div class="modal-box">
+    <h3>➕ New Stock Audit</h3>
+    <div class="form-group"><label>Location</label><input id="na-loc" placeholder="e.g. Mumbai Showroom"></div>
+    <div class="form-group"><label>Auditor</label><input id="na-aud" value="${currentUser.name}"></div>
+    <div class="form-group"><label>Notes</label><input id="na-notes" placeholder="Any initial notes"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveNewAudit()">Create Audit</button>
+    </div>
+  </div>`);
+}
+
+function saveNewAudit(){
+  const n=nextId('audits');
+  const aid='AUD-'+String(n).padStart(3,'0');
+  addRow('audits',{
+    id:n,auditId:aid,
+    location:document.getElementById('na-loc').value,
+    auditor:document.getElementById('na-aud').value,
+    auditDate:new Date().toISOString(),status:'In Progress',itemsAudited:0,mismatches:0,
+    notes:document.getElementById('na-notes').value
+  });
+  addAuditLog('NEW_AUDIT',`Audit ${aid} created at ${document.getElementById('na-loc').value}`);
+  showToast('Audit created','success');
+  closeModal();
+  renderAudit();
+}
+
+function viewAuditItems(auditId){
+  const items=getTable('auditItems').filter(i=>i.auditId===auditId);
+  showModal(`<div class="modal-box" style="max-width:700px">
+    <h3>📋 Audit Items — ${auditId}</h3>
+    ${makeTable(['SKU','Name','System Qty','Physical Qty','Difference','Status','Action'],
+      items.map(i=>[
+        `<code style="font-size:11px">${i.sku}</code>`,i.name,i.systemQty,i.physicalQty,
+        `<strong style="color:${i.difference<0?'var(--danger)':i.difference>0?'var(--warning)':'var(--success)'}">${i.difference>0?'+':''}${i.difference}</strong>`,
+        statusBadge(i.status),i.action
+      ]),'No items recorded')}
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal()">Close</button></div>
+  </div>`);
+}
+
+function addAuditItem(auditId){
+  showModal(`<div class="modal-box">
+    <h3>➕ Add Audit Item — ${auditId}</h3>
+    <div class="form-row">
+      <div class="form-group"><label>SKU</label><input id="ai-sku" placeholder="SKU code"></div>
+      <div class="form-group"><label>Item Name</label><input id="ai-name" placeholder="Item description"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>System Qty</label><input id="ai-sys" type="number" value="0"></div>
+      <div class="form-group"><label>Physical Qty</label><input id="ai-phy" type="number" value="0"></div>
+    </div>
+    <div class="form-group"><label>Required Action</label><input id="ai-action" placeholder="e.g. Investigate, Transfer, Write-off"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveAuditItem('${auditId}')">Add</button>
+    </div>
+  </div>`);
+}
+
+function saveAuditItem(auditId){
+  const sys=parseInt(document.getElementById('ai-sys').value)||0;
+  const phy=parseInt(document.getElementById('ai-phy').value)||0;
+  const diff=phy-sys;
+  addRow('auditItems',{
+    id:nextId('auditItems'),auditId,
+    sku:document.getElementById('ai-sku').value,
+    name:document.getElementById('ai-name').value,
+    systemQty:sys,physicalQty:phy,difference:diff,
+    status:diff===0?'Match':'Mismatch',
+    action:document.getElementById('ai-action').value||'Pending Review'
+  });
+  const audit=getTable('audits').find(a=>a.auditId===auditId);
+  if(audit){
+    const items=getTable('auditItems').filter(i=>i.auditId===auditId);
+    updateRow('audits',audit.id,{itemsAudited:items.length,mismatches:items.filter(i=>i.status==='Mismatch').length});
+  }
+  addAuditLog('ADD_AUDIT_ITEM',`Item added to ${auditId}: ${document.getElementById('ai-sku').value}`);
+  showToast('Item added to audit','success');
+  closeModal();
+  renderAudit();
+}
+</script>
+
+<script>
+// ============================================================
+// MODULE: REORDER MANAGEMENT
+// ============================================================
+function renderReorder(){
+  const parts=getTable('parts');
+  const pos=getTable('purchaseorders');
+  const lowStock=parts.filter(p=>p.qty<p.minQty);
+  const outOfStock=parts.filter(p=>p.qty===0);
+
+  function suggestQty(p){
+    const deficit=p.minQty-p.qty;
+    return Math.max(deficit*3,p.minQty);
+  }
+
+  const html=`
+  <div class="module-header">
+    <h2>🔄 Reorder Management</h2>
+    <p>Low stock alerts, purchase suggestions, and purchase order tracking</p>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-card danger"><div class="stat-label">Items Needing Reorder</div><div class="stat-value">${lowStock.length}</div></div>
+    <div class="stat-card danger"><div class="stat-label">Out of Stock</div><div class="stat-value">${outOfStock.length}</div></div>
+    <div class="stat-card warning"><div class="stat-label">Open POs</div><div class="stat-value">${pos.filter(p=>p.status==='Processing'||p.status==='Partial').length}</div></div>
+    <div class="stat-card danger"><div class="stat-label">Overdue POs</div><div class="stat-value">${pos.filter(p=>p.status==='Overdue').length}</div></div>
+  </div>
+
+  <div class="card" style="border-left:4px solid var(--danger)">
+    <div class="card-header"><h3>🚨 Reorder Suggestions</h3><span style="font-size:12px;color:var(--text2)">${lowStock.length} items below minimum level</span></div>
+    ${lowStock.length?`<div class="table-wrap"><table>
+      <thead><tr><th>SKU</th><th>Name</th><th>Location</th><th>Current Qty</th><th>Min Qty</th><th>Shortage</th><th>Suggested Reorder</th><th>Action</th></tr></thead>
+      <tbody>
+        ${lowStock.map(p=>`<tr>
+          <td><code style="font-size:11px">${p.sku}</code></td>
+          <td>${p.name}</td>
+          <td>${p.location}</td>
+          <td><strong style="color:${p.qty===0?'var(--danger)':'var(--warning)'}">${p.qty}</strong></td>
+          <td>${p.minQty}</td>
+          <td style="color:var(--danger)"><strong>${p.minQty-p.qty}</strong></td>
+          <td><strong>${suggestQty(p)} ${p.unit}</strong></td>
+          <td><button class="btn btn-primary btn-sm" onclick="createPOModal('${p.sku}','${p.name}',${suggestQty(p)},${p.price})">Create PO</button></td>
+        </tr>`).join('')}
+      </tbody>
+    </table></div>`:'<div class="empty-state"><div class="empty-icon">✅</div><p>All parts are adequately stocked</p></div>'}
+  </div>
+
+  <div class="card">
+    <div class="card-header"><h3>📄 Purchase Orders</h3><button class="btn btn-primary btn-sm" onclick="createPOModal()">+ New PO</button></div>
+    ${makeTable(
+      ['PO Number','Supplier','Item','Qty Ordered','Total Value','Order Date','Expected','Received','Status','Actions'],
+      pos.map(p=>[
+        `<strong>${p.poNumber}</strong>`,p.supplier,p.item,p.qty,
+        `₹${p.totalValue.toLocaleString()}`,fmtDate(p.orderDate),fmtDate(p.expectedDate),
+        `${p.receivedQty}/${p.qty}`,statusBadge(p.status),
+        `<div style="display:flex;gap:4px">
+          <button class="btn btn-primary btn-sm" onclick="updatePO(${p.id})">Update</button>
+          <button class="btn btn-danger btn-sm" onclick="deletePO(${p.id})">Delete</button>
+        </div>`
+      ])
+    )}
+  </div>`;
+
+  document.getElementById('main-content').innerHTML=html;
+}
+
+function createPOModal(sku,name,qty,price){
+  const suppliers=getTable('suppliers');
+  showModal(`<div class="modal-box">
+    <h3>📄 Create Purchase Order</h3>
+    <div class="form-group"><label>Supplier *</label>
+      <select id="po-sup">${suppliers.map(s=>`<option>${s.name}</option>`).join('')}<option>Other</option></select>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Item *</label><input id="po-item" value="${name||''}"></div>
+      <div class="form-group"><label>Qty *</label><input id="po-qty" type="number" value="${qty||1}"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Unit Price (₹)</label><input id="po-price" type="number" value="${price||0}"></div>
+      <div class="form-group"><label>Expected Delivery</label><input id="po-exp" type="date"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="savePO()">Create PO</button>
+    </div>
+  </div>`);
+}
+
+function savePO(){
+  const n=nextId('purchaseorders');
+  const poNum='PO-2026-'+String(n).padStart(3,'0');
+  const qty=parseInt(document.getElementById('po-qty').value)||0;
+  const price=parseFloat(document.getElementById('po-price').value)||0;
+  addRow('purchaseorders',{
+    id:n,poNumber:poNum,
+    supplier:document.getElementById('po-sup').value,
+    item:document.getElementById('po-item').value,
+    qty,unitPrice:price,totalValue:qty*price,
+    orderDate:new Date().toISOString(),
+    expectedDate:document.getElementById('po-exp').value?new Date(document.getElementById('po-exp').value).toISOString():'',
+    receivedQty:0,status:'Processing'
+  });
+  addAuditLog('CREATE_PO',`PO ${poNum} created for ${document.getElementById('po-item').value}`);
+  showToast('Purchase Order created','success');
+  closeModal();
+  renderReorder();
+}
+
+function updatePO(id){
+  const po=getTable('purchaseorders').find(x=>x.id===id);
+  if(!po)return;
+  showModal(`<div class="modal-box">
+    <h3>✏️ Update PO — ${po.poNumber}</h3>
+    <div class="form-group"><label>Status</label>
+      <select id="upd-status">
+        ${['Processing','Partial','Received','Overdue','Cancelled'].map(s=>`<option ${s===po.status?'selected':''}>${s}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group"><label>Received Qty</label><input id="upd-rcv" type="number" value="${po.receivedQty}"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="savePOUpdate(${id})">Update</button>
+    </div>
+  </div>`);
+}
+
+function savePOUpdate(id){
+  const po=getTable('purchaseorders').find(x=>x.id===id);
+  const ns=document.getElementById('upd-status').value;
+  const rcv=parseInt(document.getElementById('upd-rcv').value)||0;
+  updateRow('purchaseorders',id,{status:ns,receivedQty:rcv});
+  addAuditLog('UPDATE_PO',`${po.poNumber}: ${po.status} → ${ns}, received ${rcv}`);
+  showToast('PO updated','success');
+  closeModal();
+  renderReorder();
+}
+
+function deletePO(id){
+  const po=getTable('purchaseorders').find(x=>x.id===id);
+  confirm2(`Delete PO "${po.poNumber}"?`,function(){
+    deleteRow('purchaseorders',id);
+    addAuditLog('DELETE_PO',`PO ${po.poNumber} deleted`);
+    showToast('PO deleted','success');
+    renderReorder();
+  });
+}
+
+// ============================================================
+// MODULE: AGING INVENTORY
+// ============================================================
+function renderAging(){
+  const vehicles=getTable('vehicles');
+  const parts=getTable('parts');
+
+  const agingV=vehicles.map(v=>({...v,age:daysSince(v.receivedDate)})).sort((a,b)=>b.age-a.age);
+  const agingP=parts.map(p=>({...p,age:daysSince(p.lastUpdated)})).sort((a,b)=>b.age-a.age);
+
+  function riskLevel(days){
+    if(days>180)return{level:'Critical',color:'var(--danger)',action:'Immediate discount/transfer'};
+    if(days>90)return{level:'High',color:'var(--warning)',action:'Plan discount or reallocation'};
+    if(days>45)return{level:'Medium',color:'var(--accent)',action:'Monitor closely'};
+    return{level:'Low',color:'var(--success)',action:'Normal'};
+  }
+
+  const critV=agingV.filter(v=>v.age>90&&v.status!=='Sold'&&v.status!=='Delivered');
+  const critP=agingP.filter(p=>p.age>30);
+  const totalAgingValue=critV.reduce((s,v)=>s+v.price,0);
+
+  const html=`
+  <div class="module-header">
+    <h2>⏳ Aging Inventory</h2>
+    <p>Identify slow-moving, dead stock and high holding-cost inventory</p>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-card danger"><div class="stat-label">Vehicles > 90 Days</div><div class="stat-value">${critV.length}</div></div>
+    <div class="stat-card warning"><div class="stat-label">Vehicles > 45 Days</div><div class="stat-value">${agingV.filter(v=>v.age>45&&v.status!=='Sold'&&v.status!=='Delivered').length}</div></div>
+    <div class="stat-card danger"><div class="stat-label">Aging Vehicle Value</div><div class="stat-value" style="font-size:16px">₹${(totalAgingValue/100000).toFixed(1)}L</div></div>
+    <div class="stat-card warning"><div class="stat-label">Parts Not Updated > 30d</div><div class="stat-value">${critP.length}</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><h3>🚗 Aging Vehicle Report</h3></div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>VIN</th><th>Model</th><th>Color</th><th>Location</th><th>Status</th><th>Days in Inventory</th><th>Risk Level</th><th>Suggested Action</th></tr></thead>
+      <tbody>
+        ${agingV.filter(v=>v.status!=='Sold'&&v.status!=='Delivered').map(v=>{
+          const r=riskLevel(v.age);
+          return`<tr>
+            <td><code style="font-size:11px">${v.vin}</code></td>
+            <td>${v.model}</td><td>${v.color}</td><td>${v.location}</td>
+            <td>${statusBadge(v.status)}</td>
+            <td><strong style="color:${r.color}">${v.age} days</strong></td>
+            <td><span class="badge" style="background:${r.color}20;color:${r.color}">${r.level}</span></td>
+            <td style="font-size:12px;color:var(--text2)">${r.action}</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table></div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><h3>🔧 Spare Parts — Stock Age Report</h3></div>
+    ${makeTable(
+      ['SKU','Name','Category','Location','Qty','Days Since Update','Status'],
+      agingP.map(p=>{
+        const r=riskLevel(p.age);
+        return[
+          `<code style="font-size:11px">${p.sku}</code>`,p.name,p.category,p.location,p.qty,
+          `<strong style="color:${r.color}">${p.age} days</strong>`,
+          `<span class="badge" style="background:${r.color}20;color:${r.color}">${r.level}</span>`
+        ];
+      })
+    )}
+  </div>`;
+  document.getElementById('main-content').innerHTML=html;
+}
+</script>
+
+<script>
+// ============================================================
+// MODULE: DAMAGE MANAGEMENT
+// ============================================================
+function renderDamage(){
+  const damages=getTable('damages');
+  const html=`
+  <div class="module-header">
+    <h2>⚠️ Damage Management</h2>
+    <p>Track damaged vehicles and parts with repair and insurance workflows</p>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-card danger"><div class="stat-label">Total Damage Reports</div><div class="stat-value">${damages.length}</div></div>
+    <div class="stat-card warning"><div class="stat-label">Under Repair</div><div class="stat-value">${damages.filter(d=>d.status==='Under Repair').length}</div></div>
+    <div class="stat-card warning"><div class="stat-label">Under Review</div><div class="stat-value">${damages.filter(d=>d.status==='Under Review').length}</div></div>
+    <div class="stat-card info"><div class="stat-label">Claims Raised</div><div class="stat-value">${damages.filter(d=>d.insuranceClaim==='Raised').length}</div></div>
+  </div>
+  <div class="card">
+    <div class="card-header"><h3>Damage Reports</h3><button class="btn btn-danger btn-sm" onclick="addDamageModal()">+ Report Damage</button></div>
+    ${damages.length?`<div style="display:flex;flex-direction:column;gap:12px">
+      ${damages.map(d=>`
+        <div class="card" style="margin-bottom:0;border-left:4px solid var(--danger)">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+            <div style="flex:1">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+                <strong style="font-size:15px">${d.damageId}</strong>
+                ${statusBadge(d.status)}
+                <span class="badge badge-${d.type==='Vehicle'?'info':'neutral'}">${d.type}</span>
+              </div>
+              <div style="font-size:14px;font-weight:600;margin-bottom:4px">${d.itemName} <code style="font-size:11px;color:var(--text2)">(${d.itemRef})</code></div>
+              <div style="font-size:13px;color:var(--text2);margin-bottom:8px">📍 ${d.location} | Detected: ${fmtDate(d.detectedDate)} by ${d.detectedBy}</div>
+              <div style="font-size:13px;margin-bottom:6px"><strong>Damage:</strong> ${d.damageType}</div>
+              <div style="display:flex;gap:20px;font-size:12px;color:var(--text2)">
+                <span>Responsible: <strong style="color:var(--text)">${d.responsible}</strong></span>
+                <span>Insurance: <strong style="color:var(--text)">${d.insuranceClaim}</strong></span>
+                ${d.repairCost?`<span>Repair Cost: <strong style="color:var(--warning)">₹${d.repairCost.toLocaleString()}</strong></span>`:''}
+              </div>
+              ${d.notes?`<div style="font-size:12px;color:var(--text2);margin-top:6px;padding:6px;background:var(--card2);border-radius:4px">${d.notes}</div>`:''}
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
+              <button class="btn btn-primary btn-sm" onclick="editDamage(${d.id})">Update</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteDamage(${d.id})">Delete</button>
+            </div>
+          </div>
+        </div>`).join('')}
+    </div>`:'<div class="empty-state"><div class="empty-icon">✅</div><p>No damage reports recorded</p></div>'}
+  </div>`;
+  document.getElementById('main-content').innerHTML=html;
+}
+
+function addDamageModal(){
+  showModal(`<div class="modal-box">
+    <h3>⚠️ Report Damage</h3>
+    <div class="form-row">
+      <div class="form-group"><label>Type</label><select id="dm-type"><option>Vehicle</option><option>Parts</option></select></div>
+      <div class="form-group"><label>Item Ref (VIN or SKU)</label><input id="dm-ref" placeholder="VIN or SKU"></div>
+    </div>
+    <div class="form-group"><label>Item Name</label><input id="dm-name" placeholder="Vehicle model or Part name"></div>
+    <div class="form-row">
+      <div class="form-group"><label>Location</label><input id="dm-loc" placeholder="Where damage was detected"></div>
+      <div class="form-group"><label>Responsible Party</label><input id="dm-resp" placeholder="e.g. Transport Vendor"></div>
+    </div>
+    <div class="form-group"><label>Damage Description</label><input id="dm-desc" placeholder="Describe the damage"></div>
+    <div class="form-row">
+      <div class="form-group"><label>Insurance Claim</label><select id="dm-ins"><option>Not Required</option><option>Raised</option><option>Claimed</option></select></div>
+      <div class="form-group"><label>Estimated Repair Cost (₹)</label><input id="dm-cost" type="number" value="0"></div>
+    </div>
+    <div class="form-group"><label>Notes</label><input id="dm-notes" placeholder="Additional notes"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-danger" onclick="saveDamage()">Report Damage</button>
+    </div>
+  </div>`);
+}
+
+function saveDamage(){
+  const n=nextId('damages');
+  const did='DMG-'+String(n).padStart(3,'0');
+  addRow('damages',{
+    id:n,damageId:did,
+    type:document.getElementById('dm-type').value,
+    itemRef:document.getElementById('dm-ref').value,
+    itemName:document.getElementById('dm-name').value,
+    location:document.getElementById('dm-loc').value,
+    damageType:document.getElementById('dm-desc').value,
+    detectedDate:new Date().toISOString(),
+    detectedBy:currentUser.name,
+    responsible:document.getElementById('dm-resp').value,
+    status:'Under Review',
+    insuranceClaim:document.getElementById('dm-ins').value,
+    repairCost:parseFloat(document.getElementById('dm-cost').value)||0,
+    notes:document.getElementById('dm-notes').value
+  });
+  addAuditLog('REPORT_DAMAGE',`Damage reported: ${did} — ${document.getElementById('dm-name').value}`);
+  showToast('Damage report created','success');
+  closeModal();
+  renderDamage();
+}
+
+function editDamage(id){
+  const d=getTable('damages').find(x=>x.id===id);
+  if(!d)return;
+  showModal(`<div class="modal-box">
+    <h3>✏️ Update Damage — ${d.damageId}</h3>
+    <div class="form-group"><label>Status</label>
+      <select id="ed-status">${['Under Review','Under Repair','Repaired','Scrapped','Resolved'].map(s=>`<option ${s===d.status?'selected':''}>${s}</option>`).join('')}</select>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Insurance Claim</label>
+        <select id="ed-ins">${['Not Required','Raised','Claimed','Rejected'].map(s=>`<option ${s===d.insuranceClaim?'selected':''}>${s}</option>`).join('')}</select>
+      </div>
+      <div class="form-group"><label>Repair Cost (₹)</label><input id="ed-cost" type="number" value="${d.repairCost}"></div>
+    </div>
+    <div class="form-group"><label>Notes</label><input id="ed-notes" value="${d.notes||''}"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveDamageEdit(${id})">Save</button>
+    </div>
+  </div>`);
+}
+
+function saveDamageEdit(id){
+  const d=getTable('damages').find(x=>x.id===id);
+  const ns=document.getElementById('ed-status').value;
+  updateRow('damages',id,{
+    status:ns,
+    insuranceClaim:document.getElementById('ed-ins').value,
+    repairCost:parseFloat(document.getElementById('ed-cost').value)||0,
+    notes:document.getElementById('ed-notes').value
+  });
+  addAuditLog('UPDATE_DAMAGE',`${d.damageId}: ${d.status} → ${ns}`);
+  showToast('Damage record updated','success');
+  closeModal();
+  renderDamage();
+}
+
+function deleteDamage(id){
+  const d=getTable('damages').find(x=>x.id===id);
+  confirm2(`Delete damage report "${d.damageId}"?`,function(){
+    deleteRow('damages',id);
+    addAuditLog('DELETE_DAMAGE',`Damage report ${d.damageId} deleted`);
+    showToast('Damage report deleted','success');
+    renderDamage();
+  });
+}
+
+// ============================================================
+// MODULE: SUPPLIER MANAGEMENT
+// ============================================================
+function renderSupplier(){
+  const suppliers=getTable('suppliers');
+  const pos=getTable('purchaseorders');
+
+  function ratingBadge(r){
+    if(r==='Good')return'<span class="badge badge-success">Good</span>';
+    if(r==='Poor')return'<span class="badge badge-danger">Poor</span>';
+    return'<span class="badge badge-warning">Average</span>';
+  }
+
+  const html=`
+  <div class="module-header">
+    <h2>🏭 Supplier Management</h2>
+    <p>Supplier profiles, PO tracking, and vendor performance analytics</p>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-card accent"><div class="stat-label">Total Suppliers</div><div class="stat-value">${suppliers.length}</div></div>
+    <div class="stat-card success"><div class="stat-label">Good Performers</div><div class="stat-value">${suppliers.filter(s=>s.rating==='Good').length}</div></div>
+    <div class="stat-card danger"><div class="stat-label">Poor Performers</div><div class="stat-value">${suppliers.filter(s=>s.rating==='Poor').length}</div></div>
+    <div class="stat-card warning"><div class="stat-label">Pending Orders</div><div class="stat-value">${suppliers.reduce((s,x)=>s+x.pendingOrders,0)}</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><h3>Supplier Performance Dashboard</h3><button class="btn btn-primary btn-sm" onclick="addSupplierModal()">+ Add Supplier</button></div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Supplier</th><th>Contact</th><th>Category</th><th>Location</th><th>On-Time Delivery</th><th>Quality Issues</th><th>Pending Orders</th><th>Rating</th><th>Actions</th></tr></thead>
+      <tbody>
+        ${suppliers.map(s=>`<tr>
+          <td><strong>${s.name}</strong></td>
+          <td><div style="font-size:12px">${s.contact}</div><div style="font-size:11px;color:var(--text2)">${s.phone}</div></td>
+          <td><span class="tag">${s.category}</span></td>
+          <td>${s.location}</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="progress-bar" style="width:80px"><div class="progress-fill" style="width:${s.onTime}%;background:${s.onTime>=85?'var(--success)':s.onTime>=70?'var(--warning)':'var(--danger)'}"></div></div>
+              <span style="font-size:12px;font-weight:600">${s.onTime}%</span>
+            </div>
+          </td>
+          <td><strong style="color:${s.qualityIssues>8?'var(--danger)':s.qualityIssues>4?'var(--warning)':'var(--success)'}">${s.qualityIssues}</strong></td>
+          <td>${s.pendingOrders}</td>
+          <td>${ratingBadge(s.rating)}</td>
+          <td><div style="display:flex;gap:4px">
+            <button class="btn btn-primary btn-sm" onclick="editSupplier(${s.id})">Edit</button>
+            <button class="btn btn-secondary btn-sm" onclick="viewSupplierPOs('${s.name}')">POs</button>
+          </div></td>
+        </tr>`).join('')}
+      </tbody>
+    </table></div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><h3>📄 Purchase Order Status</h3></div>
+    ${makeTable(
+      ['PO Number','Supplier','Item','Ordered','Received','Expected','Status'],
+      pos.map(p=>[
+        `<strong>${p.poNumber}</strong>`,p.supplier,p.item,p.qty,
+        `${p.receivedQty}/${p.qty}`,fmtDate(p.expectedDate),statusBadge(p.status)
+      ])
+    )}
+  </div>`;
+  document.getElementById('main-content').innerHTML=html;
+}
+
+function addSupplierModal(){
+  showModal(`<div class="modal-box">
+    <h3>➕ Add Supplier</h3>
+    <div class="form-row">
+      <div class="form-group"><label>Company Name *</label><input id="ns-name" placeholder="Supplier company name"></div>
+      <div class="form-group"><label>Contact Person</label><input id="ns-contact" placeholder="Contact name"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Phone</label><input id="ns-phone" placeholder="Phone number"></div>
+      <div class="form-group"><label>Email</label><input id="ns-email" placeholder="Email address"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Category</label><input id="ns-cat" placeholder="e.g. Engine Parts"></div>
+      <div class="form-group"><label>Location</label><input id="ns-loc" placeholder="City"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveSupplier()">Add Supplier</button>
+    </div>
+  </div>`);
+}
+
+function saveSupplier(){
+  const name=document.getElementById('ns-name').value.trim();
+  if(!name){showToast('Company name required','error');return;}
+  addRow('suppliers',{
+    id:nextId('suppliers'),name,
+    contact:document.getElementById('ns-contact').value,
+    phone:document.getElementById('ns-phone').value,
+    email:document.getElementById('ns-email').value,
+    category:document.getElementById('ns-cat').value,
+    location:document.getElementById('ns-loc').value,
+    rating:'Average',onTime:80,qualityIssues:0,pendingOrders:0
+  });
+  addAuditLog('ADD_SUPPLIER',`Supplier added: ${name}`);
+  showToast('Supplier added','success');
+  closeModal();
+  renderSupplier();
+}
+
+function editSupplier(id){
+  const s=getTable('suppliers').find(x=>x.id===id);
+  if(!s)return;
+  showModal(`<div class="modal-box">
+    <h3>✏️ Edit Supplier — ${s.name}</h3>
+    <div class="form-row">
+      <div class="form-group"><label>Contact</label><input id="es-contact" value="${s.contact}"></div>
+      <div class="form-group"><label>Phone</label><input id="es-phone" value="${s.phone}"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>On-Time %</label><input id="es-ontime" type="number" min="0" max="100" value="${s.onTime}"></div>
+      <div class="form-group"><label>Quality Issues</label><input id="es-qi" type="number" value="${s.qualityIssues}"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Pending Orders</label><input id="es-pending" type="number" value="${s.pendingOrders}"></div>
+      <div class="form-group"><label>Rating</label>
+        <select id="es-rating"><option ${s.rating==='Good'?'selected':''}>Good</option><option ${s.rating==='Average'?'selected':''}>Average</option><option ${s.rating==='Poor'?'selected':''}>Poor</option></select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveSupplierEdit(${id})">Save</button>
+    </div>
+  </div>`);
+}
+
+function saveSupplierEdit(id){
+  updateRow('suppliers',id,{
+    contact:document.getElementById('es-contact').value,
+    phone:document.getElementById('es-phone').value,
+    onTime:parseInt(document.getElementById('es-ontime').value)||0,
+    qualityIssues:parseInt(document.getElementById('es-qi').value)||0,
+    pendingOrders:parseInt(document.getElementById('es-pending').value)||0,
+    rating:document.getElementById('es-rating').value
+  });
+  const s=getTable('suppliers').find(x=>x.id===id);
+  addAuditLog('UPDATE_SUPPLIER',`Supplier updated: ${s.name}`);
+  showToast('Supplier updated','success');
+  closeModal();
+  renderSupplier();
+}
+
+function viewSupplierPOs(supplierName){
+  const pos=getTable('purchaseorders').filter(p=>p.supplier===supplierName);
+  showModal(`<div class="modal-box" style="max-width:700px">
+    <h3>📄 Purchase Orders — ${supplierName}</h3>
+    ${makeTable(['PO#','Item','Qty','Value','Expected','Status'],
+      pos.map(p=>[p.poNumber,p.item,p.qty,`₹${p.totalValue.toLocaleString()}`,fmtDate(p.expectedDate),statusBadge(p.status)]),
+      'No orders found')}
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal()">Close</button></div>
+  </div>`);
+}
+</script>
+
+<script>
+// ============================================================
+// MODULE: ALLOCATION MANAGEMENT
+// ============================================================
+function renderAllocation(){
+  const allocs=getTable('allocations');
+  const vehicles=getTable('vehicles');
+  const availableVehicles=vehicles.filter(v=>v.status==='Available');
+
+  const html=`
+  <div class="module-header">
+    <h2>📦 Allocation Management</h2>
+    <p>Assign available vehicles to dealer bookings and customer orders</p>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-card accent"><div class="stat-label">Total Allocations</div><div class="stat-value">${allocs.length}</div></div>
+    <div class="stat-card success"><div class="stat-label">Fulfilled</div><div class="stat-value">${allocs.filter(a=>a.status==='Fulfilled').length}</div></div>
+    <div class="stat-card warning"><div class="stat-label">Pending</div><div class="stat-value">${allocs.filter(a=>a.status==='Pending').length}</div></div>
+    <div class="stat-card info"><div class="stat-label">Available Vehicles</div><div class="stat-value">${availableVehicles.length}</div></div>
+  </div>
+
+  ${allocs.filter(a=>a.status==='Pending').length?`<div class="card" style="border-left:4px solid var(--warning)">
+    <div class="card-header"><h3>⏳ Pending Allocations — Action Required</h3></div>
+    ${allocs.filter(a=>a.status==='Pending').map(a=>`
+      <div class="alert-item warning">
+        <div class="alert-icon">📦</div>
+        <div class="alert-body" style="flex:1">
+          <div class="alert-title">${a.allocationId} — ${a.customerName}</div>
+          <div class="alert-desc">Booking: ${a.bookingId} | Model: ${a.model} ${a.color} | Dealer: ${a.dealer}</div>
+          <div class="alert-desc">Booked: ${fmtDate(a.bookingDate)} | Payment: ${a.paymentStatus}</div>
+          ${a.notes?`<div class="alert-meta">${a.notes}</div>`:''}
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0">
+          <button class="btn btn-primary btn-sm" onclick="fulfillAllocation(${a.id})">Allocate Vehicle</button>
+          <button class="btn btn-secondary btn-sm" onclick="editAllocation(${a.id})">Edit</button>
+        </div>
+      </div>`).join('')}
+  </div>`:''}
+
+  <div class="card">
+    <div class="card-header"><h3>All Allocations</h3><button class="btn btn-primary btn-sm" onclick="addAllocationModal()">+ New Booking</button></div>
+    ${makeTable(
+      ['Allocation ID','Booking ID','Customer','Model','Color','VIN','Dealer','Booked','Payment','Status','Actions'],
+      allocs.map(a=>[
+        `<strong>${a.allocationId}</strong>`,a.bookingId,a.customerName,a.model,a.color,
+        a.vin?`<code style="font-size:11px">${a.vin}</code>`:'<span style="color:var(--text2)">—</span>',
+        a.dealer,fmtDate(a.bookingDate),
+        `<span class="badge badge-${a.paymentStatus==='Full Payment'?'success':'warning'}">${a.paymentStatus}</span>`,
+        statusBadge(a.status),
+        `<div style="display:flex;gap:4px">
+          ${a.status==='Pending'?`<button class="btn btn-primary btn-sm" onclick="fulfillAllocation(${a.id})">Allocate</button>`:''}
+          <button class="btn btn-secondary btn-sm" onclick="editAllocation(${a.id})">Edit</button>
+        </div>`
+      ])
+    )}
+  </div>
+
+  <div class="card">
+    <div class="card-header"><h3>🚗 Available Vehicles for Allocation</h3></div>
+    ${makeTable(
+      ['VIN','Model','Variant','Color','Location','Price'],
+      availableVehicles.map(v=>[
+        `<code style="font-size:11px">${v.vin}</code>`,v.model,v.variant,v.color,v.location,`₹${v.price.toLocaleString()}`
+      ]),'No available vehicles')}
+  </div>`;
+  document.getElementById('main-content').innerHTML=html;
+}
+
+function addAllocationModal(){
+  showModal(`<div class="modal-box">
+    <h3>➕ New Booking / Allocation</h3>
+    <div class="form-row">
+      <div class="form-group"><label>Booking ID *</label><input id="na-bid" placeholder="e.g. BKG-1030"></div>
+      <div class="form-group"><label>Customer Name *</label><input id="na-cust" placeholder="Customer full name"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Model Requested</label><input id="na-model" placeholder="e.g. Baleno Alpha"></div>
+      <div class="form-group"><label>Color Preference</label><input id="na-color" placeholder="e.g. Pearl White"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Dealer</label><input id="na-dealer" placeholder="Dealer name"></div>
+      <div class="form-group"><label>Payment Status</label>
+        <select id="na-pay"><option>Token Amount</option><option>50% Advance</option><option>Full Payment</option></select>
+      </div>
+    </div>
+    <div class="form-group"><label>Notes</label><input id="na-notes" placeholder="Any special instructions"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveAllocation()">Create Booking</button>
+    </div>
+  </div>`);
+}
+
+function saveAllocation(){
+  const bid=document.getElementById('na-bid').value.trim();
+  const cust=document.getElementById('na-cust').value.trim();
+  if(!bid||!cust){showToast('Booking ID and Customer Name required','error');return;}
+  const n=nextId('allocations');
+  addRow('allocations',{
+    id:n,allocationId:'ALO-'+String(n).padStart(3,'0'),
+    bookingId:bid,customerName:cust,
+    model:document.getElementById('na-model').value,
+    color:document.getElementById('na-color').value,
+    vin:'',dealer:document.getElementById('na-dealer').value,
+    bookingDate:new Date().toISOString(),allocationDate:'',
+    paymentStatus:document.getElementById('na-pay').value,
+    status:'Pending',notes:document.getElementById('na-notes').value
+  });
+  addAuditLog('NEW_BOOKING',`Booking created: ${bid} for ${cust}`);
+  showToast('Booking created','success');
+  closeModal();
+  renderAllocation();
+}
+
+function fulfillAllocation(id){
+  const a=getTable('allocations').find(x=>x.id===id);
+  const vehicles=getTable('vehicles').filter(v=>v.status==='Available');
+  showModal(`<div class="modal-box">
+    <h3>🚗 Allocate Vehicle — ${a.allocationId}</h3>
+    <p style="color:var(--text2);margin-bottom:12px">Customer: <strong>${a.customerName}</strong> | Requested: <strong>${a.model} ${a.color}</strong></p>
+    <div class="form-group"><label>Select Vehicle (VIN)</label>
+      <select id="fa-vin">
+        <option value="">-- Select Available Vehicle --</option>
+        ${vehicles.map(v=>`<option value="${v.vin}">${v.vin} — ${v.model} ${v.variant} ${v.color} (${v.location})</option>`).join('')}
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-success" onclick="saveAllocationFulfill(${id})">Confirm Allocation</button>
+    </div>
+  </div>`);
+}
+
+function saveAllocationFulfill(id){
+  const vin=document.getElementById('fa-vin').value;
+  if(!vin){showToast('Please select a vehicle','error');return;}
+  const a=getTable('allocations').find(x=>x.id===id);
+  updateRow('allocations',id,{vin,status:'Processing',allocationDate:new Date().toISOString()});
+  updateRow('vehicles',getTable('vehicles').find(v=>v.vin===vin).id,{status:'Allocated'});
+  addAuditLog('ALLOCATE_VEHICLE',`VIN ${vin} allocated to ${a.customerName} (${a.bookingId})`);
+  showToast('Vehicle allocated successfully','success');
+  closeModal();
+  renderAllocation();
+}
+
+function editAllocation(id){
+  const a=getTable('allocations').find(x=>x.id===id);
+  showModal(`<div class="modal-box">
+    <h3>✏️ Edit Allocation — ${a.allocationId}</h3>
+    <div class="form-group"><label>Status</label>
+      <select id="ea-status">${['Pending','Processing','Fulfilled','Cancelled'].map(s=>`<option ${s===a.status?'selected':''}>${s}</option>`).join('')}</select>
+    </div>
+    <div class="form-group"><label>Notes</label><input id="ea-notes" value="${a.notes||''}"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveAllocationEdit(${id})">Save</button>
+    </div>
+  </div>`);
+}
+
+function saveAllocationEdit(id){
+  const a=getTable('allocations').find(x=>x.id===id);
+  const ns=document.getElementById('ea-status').value;
+  updateRow('allocations',id,{status:ns,notes:document.getElementById('ea-notes').value});
+  addAuditLog('UPDATE_ALLOCATION',`${a.allocationId}: ${a.status} → ${ns}`);
+  showToast('Allocation updated','success');
+  closeModal();
+  renderAllocation();
+}
+</script>
+
+<script>
+// ============================================================
+// MODULE: ALERTS & ESCALATIONS
+// ============================================================
+function renderAlerts(){
+  const alerts=getTable('alerts');
+  let showResolved=false;
+  let filterType='';
+
+  function render(){
+    let data=alerts;
+    if(!showResolved)data=data.filter(a=>!a.resolved);
+    if(filterType)data=data.filter(a=>a.type===filterType);
+    const container=document.getElementById('alerts-list');
+    if(!container)return;
+    container.innerHTML=data.length?data.map(a=>`
+      <div class="alert-item ${a.type}" style="background:var(--card2)">
+        <div class="alert-icon">${a.type==='critical'?'🚨':a.type==='warning'?'⚠️':'ℹ️'}</div>
+        <div class="alert-body" style="flex:1">
+          <div class="alert-title">${a.title} ${a.resolved?'<span class="badge badge-success" style="font-size:10px">Resolved</span>':''}</div>
+          <div class="alert-desc">${a.description}</div>
+          <div class="alert-meta">Module: ${a.module} | Created: ${fmtDateTime(a.createdAt)} ${a.escalatedTo?`| Escalated to: <strong>${a.escalatedTo}</strong>`:''}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
+          ${!a.resolved?`<button class="btn btn-success btn-sm" onclick="resolveAlert(${a.id})">Resolve</button>`:''}
+          <button class="btn btn-danger btn-sm" onclick="deleteAlert(${a.id})">Delete</button>
+        </div>
+      </div>`).join('')
+      :'<div class="empty-state"><div class="empty-icon">✅</div><p>No alerts found</p></div>';
+    updateAlertBadge();
+  }
+
+  const unresolvedCritical=alerts.filter(a=>!a.resolved&&a.type==='critical').length;
+  const unresolvedWarning=alerts.filter(a=>!a.resolved&&a.type==='warning').length;
+  const unresolvedInfo=alerts.filter(a=>!a.resolved&&a.type==='info').length;
+
+  const html=`
+  <div class="module-header">
+    <h2>🔔 Alerts &amp; Escalations</h2>
+    <p>Automated notifications and management escalation workflows</p>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-card danger"><div class="stat-label">Critical Alerts</div><div class="stat-value">${unresolvedCritical}</div></div>
+    <div class="stat-card warning"><div class="stat-label">Warnings</div><div class="stat-value">${unresolvedWarning}</div></div>
+    <div class="stat-card info"><div class="stat-label">Informational</div><div class="stat-value">${unresolvedInfo}</div></div>
+    <div class="stat-card success"><div class="stat-label">Resolved</div><div class="stat-value">${alerts.filter(a=>a.resolved).length}</div></div>
+  </div>
+  <div class="filter-bar">
+    <select onchange="filterType=this.value;render()">
+      <option value="">All Types</option>
+      <option value="critical">Critical</option>
+      <option value="warning">Warning</option>
+      <option value="info">Info</option>
+    </select>
+    <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text2);cursor:pointer">
+      <input type="checkbox" onchange="showResolved=this.checked;render()"> Show Resolved
+    </label>
+    <button class="btn btn-primary btn-sm" onclick="addAlertModal()">+ Add Alert</button>
+    <button class="btn btn-success btn-sm" onclick="resolveAllAlerts()">Resolve All</button>
+  </div>
+  <div id="alerts-list"></div>`;
+  document.getElementById('main-content').innerHTML=html;
+  render();
+}
+
+function resolveAlert(id){
+  updateRow('alerts',id,{resolved:true,resolvedAt:new Date().toISOString(),resolvedBy:currentUser.name});
+  const a=getTable('alerts').find(x=>x.id===id);
+  addAuditLog('RESOLVE_ALERT',`Alert resolved: ${a.title}`);
+  showToast('Alert resolved','success');
+  renderAlerts();
+}
+
+function deleteAlert(id){
+  const a=getTable('alerts').find(x=>x.id===id);
+  confirm2(`Delete alert "${a.title}"?`,function(){
+    deleteRow('alerts',id);
+    addAuditLog('DELETE_ALERT',`Alert deleted: ${a.title}`);
+    showToast('Alert deleted','success');
+    renderAlerts();
+  });
+}
+
+function resolveAllAlerts(){
+  confirm2('Resolve all open alerts?',function(){
+    const t=getTable('alerts');
+    t.forEach(a=>{if(!a.resolved){a.resolved=true;a.resolvedAt=new Date().toISOString();a.resolvedBy=currentUser.name;}});
+    setTable('alerts',t);
+    addAuditLog('RESOLVE_ALL_ALERTS','All alerts resolved');
+    showToast('All alerts resolved','success');
+    renderAlerts();
+  });
+}
+
+function addAlertModal(){
+  showModal(`<div class="modal-box">
+    <h3>🔔 Add Alert</h3>
+    <div class="form-group"><label>Type</label>
+      <select id="aa-type"><option value="critical">Critical</option><option value="warning">Warning</option><option value="info">Info</option></select>
+    </div>
+    <div class="form-group"><label>Title *</label><input id="aa-title" placeholder="Alert title"></div>
+    <div class="form-group"><label>Description</label><input id="aa-desc" placeholder="Detailed description"></div>
+    <div class="form-row">
+      <div class="form-group"><label>Module</label>
+        <select id="aa-module"><option>dashboard</option><option>vehicle</option><option>parts</option><option>transit</option><option>audit</option><option>supplier</option><option>damage</option><option>aging</option><option>allocation</option></select>
+      </div>
+      <div class="form-group"><label>Escalate To</label><input id="aa-esc" placeholder="Role or person name"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveAlert()">Create Alert</button>
+    </div>
+  </div>`);
+}
+
+function saveAlert(){
+  const title=document.getElementById('aa-title').value.trim();
+  if(!title){showToast('Title required','error');return;}
+  addRow('alerts',{
+    id:nextId('alerts'),
+    type:document.getElementById('aa-type').value,
+    title,description:document.getElementById('aa-desc').value,
+    module:document.getElementById('aa-module').value,
+    escalatedTo:document.getElementById('aa-esc').value,
+    createdAt:new Date().toISOString(),resolved:false
+  });
+  addAuditLog('CREATE_ALERT',`Alert created: ${title}`);
+  showToast('Alert created','success');
+  closeModal();
+  renderAlerts();
+}
+
+// ============================================================
+// MODULE: REPORTS & ANALYTICS
+// ============================================================
+function renderReports(){
+  const vehicles=getTable('vehicles');
+  const parts=getTable('parts');
+  const shipments=getTable('shipments');
+  const damages=getTable('damages');
+  const allocs=getTable('allocations');
+  const suppliers=getTable('suppliers');
+
+  const vByLoc={};
+  vehicles.forEach(v=>{vByLoc[v.location]=(vByLoc[v.location]||0)+1;});
+  const vByStatus={};
+  vehicles.forEach(v=>{vByStatus[v.status]=(vByStatus[v.status]||0)+1;});
+  const partsByLoc={};
+  parts.forEach(p=>{partsByLoc[p.location]=(partsByLoc[p.location]||0)+p.qty;});
+  const partsByCat={};
+  parts.forEach(p=>{partsByCat[p.category]=(partsByCat[p.category]||0)+p.qty;});
+
+  const maxVLoc=Math.max(...Object.values(vByLoc),1);
+  const maxVStat=Math.max(...Object.values(vByStatus),1);
+  const maxPLoc=Math.max(...Object.values(partsByLoc),1);
+  const maxPCat=Math.max(...Object.values(partsByCat),1);
+
+  const totalVehicleValue=vehicles.filter(v=>v.status!=='Sold'&&v.status!=='Delivered').reduce((s,v)=>s+v.price,0);
+  const totalPartsValue=parts.reduce((s,p)=>s+p.qty*p.price,0);
+  const agingVehicles=vehicles.filter(v=>daysSince(v.receivedDate)>90&&v.status!=='Sold'&&v.status!=='Delivered');
+
+  const html=`
+  <div class="module-header">
+    <h2>📈 Reports &amp; Analytics</h2>
+    <p>Business intelligence dashboards and analytics for data-driven decisions</p>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card accent"><div class="stat-label">Total Vehicle Value (Active)</div><div class="stat-value" style="font-size:16px">₹${(totalVehicleValue/10000000).toFixed(2)} Cr</div></div>
+    <div class="stat-card success"><div class="stat-label">Total Parts Value</div><div class="stat-value" style="font-size:16px">₹${(totalPartsValue/100000).toFixed(1)} L</div></div>
+    <div class="stat-card warning"><div class="stat-label">Aging Vehicles (90d+)</div><div class="stat-value">${agingVehicles.length}</div></div>
+    <div class="stat-card danger"><div class="stat-label">Total Damage Reports</div><div class="stat-value">${damages.length}</div></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header"><h3>🚗 Vehicles by Location</h3></div>
+      <div class="bar-chart">
+        ${Object.entries(vByLoc).sort((a,b)=>b[1]-a[1]).map(([l,c])=>`
+          <div class="bar-row">
+            <div class="bar-label">${l}</div>
+            <div class="bar-track"><div class="bar-fill" style="width:${Math.round(c/maxVLoc*100)}%"></div></div>
+            <div class="bar-value">${c}</div>
+          </div>`).join('')}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><h3>🔧 Parts Qty by Category</h3></div>
+      <div class="bar-chart">
+        ${Object.entries(partsByCat).sort((a,b)=>b[1]-a[1]).map(([cat,qty])=>`
+          <div class="bar-row">
+            <div class="bar-label">${cat}</div>
+            <div class="bar-track"><div class="bar-fill" style="width:${Math.round(qty/maxPCat*100)}%;background:var(--success)"></div></div>
+            <div class="bar-value">${qty}</div>
+          </div>`).join('')}
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header"><h3>📊 Vehicle Status Distribution</h3></div>
+      <div class="bar-chart">
+        ${Object.entries(vByStatus).sort((a,b)=>b[1]-a[1]).map(([s,c])=>`
+          <div class="bar-row">
+            <div class="bar-label">${s}</div>
+            <div class="bar-track"><div class="bar-fill" style="width:${Math.round(c/maxVStat*100)}%;background:${s==='Available'?'var(--success)':s==='Damaged'?'var(--danger)':s==='In Transit'?'var(--accent)':'var(--warning)'}"></div></div>
+            <div class="bar-value">${c}</div>
+          </div>`).join('')}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><h3>🏭 Supplier Performance</h3></div>
+      <div class="bar-chart">
+        ${suppliers.map(s=>`
+          <div class="bar-row">
+            <div class="bar-label" style="width:140px" title="${s.name}">${s.name.split(' ').slice(0,2).join(' ')}</div>
+            <div class="bar-track">
+              <div class="bar-fill" style="width:${s.onTime}%;background:${s.onTime>=85?'var(--success)':s.onTime>=70?'var(--warning)':'var(--danger)'}"></div>
+            </div>
+            <div class="bar-value">${s.onTime}%</div>
+          </div>`).join('')}
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><h3>📋 Summary Report</h3>
+      <button class="btn btn-secondary btn-sm" onclick="exportCSV()">⬇ Export CSV</button>
+    </div>
+    <div class="grid-3" style="gap:16px">
+      <div>
+        <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px;text-transform:uppercase">VEHICLE SUMMARY</div>
+        ${Object.entries(vByStatus).map(([s,c])=>`<div style="display:flex;justify-content:space-between;font-size:13px;padding:4px 0;border-bottom:1px solid var(--border)"><span>${s}</span><strong>${c}</strong></div>`).join('')}
+        <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;font-weight:700"><span>Total</span><strong>${vehicles.length}</strong></div>
+      </div>
+      <div>
+        <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px;text-transform:uppercase">PARTS SUMMARY</div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;padding:4px 0;border-bottom:1px solid var(--border)"><span>Total SKUs</span><strong>${parts.length}</strong></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;padding:4px 0;border-bottom:1px solid var(--border)"><span>Low Stock</span><strong style="color:var(--warning)">${parts.filter(p=>p.qty>0&&p.qty<p.minQty).length}</strong></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;padding:4px 0;border-bottom:1px solid var(--border)"><span>Out of Stock</span><strong style="color:var(--danger)">${parts.filter(p=>p.qty===0).length}</strong></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;padding:4px 0"><span>Total Value</span><strong>₹${(totalPartsValue/100000).toFixed(1)}L</strong></div>
+      </div>
+      <div>
+        <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px;text-transform:uppercase">OPERATIONS</div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;padding:4px 0;border-bottom:1px solid var(--border)"><span>Active Shipments</span><strong>${shipments.filter(s=>s.status!=='Delivered').length}</strong></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;padding:4px 0;border-bottom:1px solid var(--border)"><span>Delayed Shipments</span><strong style="color:var(--danger)">${shipments.filter(s=>s.status==='Delayed').length}</strong></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;padding:4px 0;border-bottom:1px solid var(--border)"><span>Damage Reports</span><strong style="color:var(--warning)">${damages.length}</strong></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;padding:4px 0"><span>Pending Allocations</span><strong>${allocs.filter(a=>a.status==='Pending').length}</strong></div>
+      </div>
+    </div>
+  </div>`;
+  document.getElementById('main-content').innerHTML=html;
+}
+
+function exportCSV(){
+  const vehicles=getTable('vehicles');
+  const headers=['VIN','Model','Variant','Color','Location','Status','Received Date','Price'];
+  const rows=vehicles.map(v=>[v.vin,v.model,v.variant,v.color,v.location,v.status,v.receivedDate,v.price]);
+  const csv=[headers,...rows].map(r=>r.map(c=>`"${c}"`).join(',')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='AIVTS_Vehicles_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();URL.revokeObjectURL(url);
+  showToast('CSV exported successfully','success');
+  addAuditLog('EXPORT_CSV','Vehicle data exported to CSV');
+}
+</script>
+
+<script>
+// ============================================================
+// MODULE: USER ROLES & AUDIT LOGS
+// ============================================================
+function renderUserRoles(){
+  const logs=getTable('auditlogs').slice().reverse();
+  const users=Object.entries(USERS).map(([key,u])=>({key,...u}));
+
+  const html=`
+  <div class="module-header">
+    <h2>🔐 User Roles &amp; Audit Logs</h2>
+    <p>User access control, role management, and complete system audit trail</p>
+  </div>
+
+  <div class="grid-2" style="margin-bottom:20px">
+    <div class="card">
+      <div class="card-header"><h3>👥 User Accounts</h3></div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Name</th><th>Role</th><th>Email</th><th>Status</th></tr></thead>
+        <tbody>
+          ${users.map(u=>`<tr>
+            <td><strong>${u.name}</strong></td>
+            <td>${u.role}</td>
+            <td><code style="font-size:11px">${u.email}</code></td>
+            <td><span class="badge badge-success">Active</span></td>
+          </tr>`).join('')}
+        </tbody>
+      </table></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><h3>🔑 Role Permissions</h3></div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Role</th><th>View</th><th>Edit</th><th>Delete</th><th>Admin</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Administrator</strong></td><td>✅</td><td>✅</td><td>✅</td><td>✅</td></tr>
+          <tr><td><strong>Operations Manager</strong></td><td>✅</td><td>✅</td><td>❌</td><td>❌</td></tr>
+          <tr><td><strong>Warehouse Executive</strong></td><td>✅</td><td>✅</td><td>❌</td><td>❌</td></tr>
+          <tr><td><strong>Data Analyst</strong></td><td>✅</td><td>❌</td><td>❌</td><td>❌</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h3>📝 System Audit Log</h3>
+      <div class="card-actions">
+        <span style="font-size:12px;color:var(--text2)">${logs.length} entries</span>
+        <button class="btn btn-secondary btn-sm" onclick="clearAuditLogs()">Clear Old Logs</button>
+        <button class="btn btn-secondary btn-sm" onclick="exportAuditLog()">⬇ Export</button>
+      </div>
+    </div>
+    ${makeTable(
+      ['Timestamp','User','Role','Action','Detail','Extra Info'],
+      logs.slice(0,100).map(l=>[
+        `<span style="font-size:11px;color:var(--text2)">${fmtDateTime(l.timestamp)}</span>`,
+        l.user,
+        `<span class="tag">${l.role}</span>`,
+        `<code style="font-size:11px;color:var(--accent)">${l.action}</code>`,
+        l.detail,
+        l.extra?`<span style="font-size:11px;color:var(--text2)">${l.extra}</span>`:'—'
+      ]),'No audit logs found'
+    )}
+  </div>`;
+  document.getElementById('main-content').innerHTML=html;
+}
+
+function clearAuditLogs(){
+  confirm2('Clear audit logs older than 30 days?',function(){
+    const cutoff=new Date(Date.now()-30*86400000).toISOString();
+    const logs=getTable('auditlogs').filter(l=>l.timestamp>cutoff);
+    setTable('auditlogs',logs);
+    showToast('Old audit logs cleared','success');
+    renderUserRoles();
+  });
+}
+
+function exportAuditLog(){
+  const logs=getTable('auditlogs');
+  const headers=['Timestamp','User','Role','Action','Detail','Extra'];
+  const rows=logs.map(l=>[l.timestamp,l.user,l.role,l.action,l.detail,l.extra||'']);
+  const csv=[headers,...rows].map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='AIVTS_AuditLog_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();URL.revokeObjectURL(url);
+  showToast('Audit log exported','success');
+}
+
+// ============================================================
+// MODULE ROUTER
+// ============================================================
+const MODULES = {
+  dashboard: renderDashboard,
+  vehicle:   renderVehicle,
+  parts:     renderParts,
+  transit:   renderTransit,
+  audit:     renderAudit,
+  reorder:   renderReorder,
+  aging:     renderAging,
+  damage:    renderDamage,
+  supplier:  renderSupplier,
+  allocation:renderAllocation,
+  alerts:    renderAlerts,
+  reports:   renderReports,
+  userroles: renderUserRoles
+};
+
+// ============================================================
+// DATA RESET UTILITY
+// ============================================================
+function resetAllData(){
+  confirm2('⚠️ This will DELETE all data and reload sample data. Are you sure?',function(){
+    localStorage.removeItem(DB_KEY);
+    initSampleData();
+    showToast('Data reset to sample data','info');
+    setModule('dashboard');
+  });
+}
+</script>
+
+<!-- Reset button in sidebar footer -->
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+  const sidebar=document.getElementById('sidebar');
+  if(sidebar){
+    const footer=document.createElement('div');
+    footer.style.cssText='padding:16px 12px;border-top:1px solid var(--border);margin-top:8px';
+    footer.innerHTML=`<button class="btn btn-secondary btn-sm" style="width:100%;font-size:11px" onclick="resetAllData()">🔄 Reset to Sample Data</button>
+    <div style="text-align:center;font-size:10px;color:var(--text2);margin-top:8px">AIVTS v1.0 — Standalone<br>Data: Browser localStorage</div>`;
+    sidebar.appendChild(footer);
+  }
+});
+</script>
+</body>
+</html>
