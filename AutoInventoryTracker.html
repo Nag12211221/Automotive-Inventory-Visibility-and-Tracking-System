@@ -256,7 +256,7 @@ tbody td{padding:10px 12px;vertical-align:middle}
 const DB_KEY = 'aivts_db';
 function loadDB(){
   try{ return JSON.parse(localStorage.getItem(DB_KEY)) || {}; }
-  catch(e){ return {}; }
+  catch(e){ console.warn('[AIVTS] Failed to load database from localStorage:', e); return {}; }
 }
 function saveDB(db){ localStorage.setItem(DB_KEY, JSON.stringify(db)); }
 function getTable(name){ const db=loadDB(); return db[name]||[]; }
@@ -382,15 +382,22 @@ function addAuditLog(action,detail,extra){
     timestamp:new Date().toISOString()
   });
 }
+let _pendingConfirmCb = null;
 function confirm2(msg,cb){
+  _pendingConfirmCb = cb;
   showModal(`<div class="modal-box">
     <h3>⚠️ Confirm Action</h3>
     <p style="color:var(--text2);margin-bottom:20px">${msg}</p>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-      <button class="btn btn-danger" onclick="closeModal();(${cb.toString()})()">Confirm</button>
+      <button class="btn btn-danger" id="confirm2-ok-btn">Confirm</button>
     </div>
   </div>`);
+  const btn = document.getElementById('confirm2-ok-btn');
+  if(btn) btn.addEventListener('click', function(){
+    closeModal();
+    if(_pendingConfirmCb){ _pendingConfirmCb(); _pendingConfirmCb = null; }
+  });
 }
 function makeTable(headers,rows,emptyMsg){
   if(!rows||!rows.length) return `<div class="empty-state"><div class="empty-icon">📭</div><p>${emptyMsg||'No records found'}</p></div>`;
@@ -1969,7 +1976,9 @@ function saveAllocationFulfill(id){
   if(!vin){showToast('Please select a vehicle','error');return;}
   const a=getTable('allocations').find(x=>x.id===id);
   updateRow('allocations',id,{vin,status:'Processing',allocationDate:new Date().toISOString()});
-  updateRow('vehicles',getTable('vehicles').find(v=>v.vin===vin).id,{status:'Allocated'});
+  const vehicle=getTable('vehicles').find(v=>v.vin===vin);
+  if(!vehicle){showToast('Selected vehicle not found','error');return;}
+  updateRow('vehicles',vehicle.id,{status:'Allocated'});
   addAuditLog('ALLOCATE_VEHICLE',`VIN ${vin} allocated to ${a.customerName} (${a.bookingId})`);
   showToast('Vehicle allocated successfully','success');
   closeModal();
@@ -2257,11 +2266,15 @@ function renderReports(){
   document.getElementById('main-content').innerHTML=html;
 }
 
+function csvEscape(val){
+  const s=String(val==null?'':val).replace(/"/g,'""').replace(/\r?\n/g,' ');
+  return`"${s}"`;
+}
 function exportCSV(){
   const vehicles=getTable('vehicles');
   const headers=['VIN','Model','Variant','Color','Location','Status','Received Date','Price'];
   const rows=vehicles.map(v=>[v.vin,v.model,v.variant,v.color,v.location,v.status,v.receivedDate,v.price]);
-  const csv=[headers,...rows].map(r=>r.map(c=>`"${c}"`).join(',')).join('\n');
+  const csv=[headers,...rows].map(r=>r.map(csvEscape).join(',')).join('\r\n');
   const blob=new Blob([csv],{type:'text/csv'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
@@ -2353,7 +2366,7 @@ function exportAuditLog(){
   const logs=getTable('auditlogs');
   const headers=['Timestamp','User','Role','Action','Detail','Extra'];
   const rows=logs.map(l=>[l.timestamp,l.user,l.role,l.action,l.detail,l.extra||'']);
-  const csv=[headers,...rows].map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const csv=[headers,...rows].map(r=>r.map(csvEscape).join(',')).join('\r\n');
   const blob=new Blob([csv],{type:'text/csv'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
