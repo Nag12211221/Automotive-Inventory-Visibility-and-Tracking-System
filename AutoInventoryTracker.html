@@ -149,6 +149,32 @@ tbody td{padding:10px 12px;vertical-align:middle}
 ::-webkit-scrollbar-thumb:hover{background:rgba(67,110,224,.5)}
 .tag{display:inline-block;padding:2px 8px;border-radius:5px;font-size:11px;background:rgba(67,110,224,.08);border:1px solid rgba(67,110,224,.16);color:var(--text2);margin:1px}
 .divider{border:none;border-top:1px solid rgba(67,110,224,.12);margin:16px 0}
+/* ---- Data Import Module ---- */
+.drop-zone{border:2px dashed rgba(67,110,224,.35);border-radius:12px;padding:44px 24px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;background:rgba(67,110,224,.03)}
+.drop-zone:hover,.drop-zone.drag-over{border-color:var(--accent);background:rgba(67,110,224,.08)}
+.drop-zone .dz-icon{font-size:40px;margin-bottom:12px}
+.drop-zone .dz-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px}
+.drop-zone .dz-sub{font-size:12px;color:var(--text2)}
+.fmt-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:16px}
+.fmt-card{background:rgba(67,110,224,.04);border:1px solid rgba(67,110,224,.14);border-radius:10px;padding:14px;text-align:center}
+.fmt-card .fmt-icon{font-size:22px;margin-bottom:6px}
+.fmt-card .fmt-name{font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px}
+.fmt-card .fmt-desc{font-size:11px;color:var(--text2)}
+.val-row{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;font-size:13px;margin-bottom:6px}
+.val-row.pass{background:rgba(16,201,138,.07);border:1px solid rgba(16,201,138,.16)}
+.val-row.fail{background:rgba(230,76,92,.07);border:1px solid rgba(230,76,92,.16)}
+.val-row.warn{background:rgba(240,156,56,.07);border:1px solid rgba(240,156,56,.16)}
+.val-icon{font-size:16px;flex-shrink:0}
+.val-label{font-weight:600;flex:1}
+.val-detail{font-size:11px;color:var(--text2)}
+.preview-wrap{overflow-x:auto;max-height:320px;overflow-y:auto}
+.stat-mini{background:rgba(67,110,224,.06);border:1px solid rgba(67,110,224,.16);border-radius:10px;padding:16px;text-align:center}
+.stat-mini .sm-val{font-size:26px;font-weight:700;color:var(--accent2);letter-spacing:-.02em}
+.stat-mini .sm-lbl{font-size:11px;color:var(--text2);margin-top:4px;text-transform:uppercase;letter-spacing:.5px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+.di-error-box{background:rgba(230,76,92,.08);border:1px solid rgba(230,76,92,.2);border-radius:10px;padding:16px;margin-bottom:16px}
+.di-error-box ul{padding-left:20px;font-size:13px;color:var(--text);margin-top:8px}
+.di-error-box li{margin-bottom:4px}
 </style>
 </head>
 <body>
@@ -249,6 +275,12 @@ tbody td{padding:10px 12px;vertical-align:middle}
         </div>
         <div class="nav-item" data-module="reports" onclick="setModule('reports')">
           <span class="nav-icon">📈</span>Reports &amp; Analytics
+        </div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Data</div>
+        <div class="nav-item" data-module="dataimport" onclick="setModule('dataimport')">
+          <span class="nav-icon">📥</span>Data Import &amp; Analysis
         </div>
       </div>
       <div class="sidebar-section">
@@ -2347,6 +2379,611 @@ function exportAuditLog(){
   a.click();URL.revokeObjectURL(url);
   showToast('Audit log exported','success');
 }
+</script>
+
+<script>
+// ============================================================
+// MODULE: DATA IMPORT & COMPANY ANALYSIS
+// ============================================================
+
+// Loaded SheetJS flag
+let _xlsxReady = false;
+
+// State: currently loaded dataset
+let _diData = { rows: [], headers: [], fileName: '', format: '', valid: false };
+
+// ---- Column alias mapping for flexible validation ----
+const DI_REQUIRED_COLS = [
+  { key: 'company_name',  aliases: ['company_name','company name','name','company','organization','org_name','companyname'] },
+  { key: 'industry',      aliases: ['industry','sector','category','business_type','business type','vertical','segment'] },
+  { key: 'revenue',       aliases: ['revenue','annual_revenue','annual revenue','sales','turnover','income','revenues','net_revenue'] },
+  { key: 'employee_count',aliases: ['employee_count','employees','headcount','staff','workforce','num_employees','employee count','total_employees','numberofemployees'] },
+  { key: 'founding_year', aliases: ['founding_year','founded','year_founded','established','year established','incorporation_year','yearfounded'] },
+  { key: 'location',      aliases: ['location','city','headquarters','hq','region','country','place','office','base'] }
+];
+
+const DI_OPTIONAL_COLS = ['headquarters','website','ceo','stock_symbol','market_cap','description','phone','email','revenue_growth','profit_margin'];
+
+function diNorm(s){ return String(s||'').toLowerCase().replace(/[\s_\-]/g,''); }
+
+function diMapHeaders(rawHeaders){
+  const norm = rawHeaders.map(h=>diNorm(h));
+  const map = {};
+  DI_REQUIRED_COLS.forEach(rc=>{
+    const found = rc.aliases.find(a=>norm.includes(diNorm(a)));
+    map[rc.key] = found ? rawHeaders[norm.indexOf(diNorm(found))] : null;
+  });
+  return map;
+}
+
+// ---- CSV Parser ----
+function parseCSV(text){
+  const lines = text.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n').filter(l=>l.trim()!=='');
+  if(!lines.length) return {error:'File is empty.'};
+  const headers = parseCSVRow(lines[0]);
+  const rows = [];
+  const parseErrors = [];
+  for(let i=1;i<lines.length;i++){
+    if(!lines[i].trim()) continue;
+    const cells = parseCSVRow(lines[i]);
+    if(cells.length !== headers.length){
+      parseErrors.push(`Row ${i+1}: expected ${headers.length} columns, got ${cells.length}`);
+      if(parseErrors.length>3) break;
+      continue;
+    }
+    const obj={};
+    headers.forEach((h,j)=>{ obj[h]=cells[j]; });
+    rows.push(obj);
+  }
+  return {headers, rows, parseErrors};
+}
+function parseCSVRow(line){
+  const cols=[];
+  let cur='',inQ=false;
+  for(let i=0;i<line.length;i++){
+    const ch=line[i];
+    if(ch==='"'&&inQ&&line[i+1]==='"'){cur+='"';i++;}
+    else if(ch==='"'){inQ=!inQ;}
+    else if(ch===','&&!inQ){cols.push(cur.trim());cur='';}
+    else cur+=ch;
+  }
+  cols.push(cur.trim());
+  return cols;
+}
+
+// ---- JSON Parser ----
+function parseJSON(text){
+  let parsed;
+  try{ parsed = JSON.parse(text); }
+  catch(e){ return {error:'Invalid JSON: '+e.message}; }
+  let rows;
+  if(Array.isArray(parsed)){ rows = parsed; }
+  else if(typeof parsed==='object'){
+    const arrKey = ['companies','data','records','items','rows','results','companies_list'].find(k=>Array.isArray(parsed[k]));
+    if(arrKey){ rows = parsed[arrKey]; }
+    else{
+      const anyArr = Object.keys(parsed).find(k=>Array.isArray(parsed[k]));
+      if(anyArr){ rows = parsed[anyArr]; }
+      else{ return {error:'JSON must contain an array of objects at the top level or inside a "companies", "data", or "records" key.'}; }
+    }
+  } else { return {error:'JSON root must be an object or array.'}; }
+  if(!rows.length) return {error:'JSON array is empty.'};
+  if(typeof rows[0]!=='object'||Array.isArray(rows[0])) return {error:'JSON array must contain objects (key-value records).'};
+  const headers = [...new Set(rows.flatMap(r=>Object.keys(r)))];
+  rows = rows.map(r=>{ const o={}; headers.forEach(h=>{o[h]=r[h]!==undefined?r[h]:''}); return o; });
+  return {headers, rows, parseErrors:[]};
+}
+
+// ---- XLSX Parser (requires SheetJS) ----
+function parseXLSX(arrayBuffer){
+  if(!window.XLSX) return {error:'Excel parsing library not loaded. Check your internet connection and retry.'};
+  try{
+    const wb = XLSX.read(arrayBuffer, {type:'array'});
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const data = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+    if(!data.length) return {error:'Excel sheet is empty.'};
+    const headers = data[0].map(h=>String(h));
+    const rows = [];
+    for(let i=1;i<data.length;i++){
+      if(data[i].every(c=>c===''||c===null||c===undefined)) continue;
+      const obj={};
+      headers.forEach((h,j)=>{ obj[h]=data[i][j]!==undefined?data[i][j]:''; });
+      rows.push(obj);
+    }
+    return {headers, rows, parseErrors:[]};
+  }catch(e){ return {error:'Failed to parse Excel file: '+e.message}; }
+}
+
+// ---- Parquet Parser (uses hyparquet from CDN) ----
+async function parseParquet(arrayBuffer){
+  if(!window.hyparquet){
+    try{
+      await new Promise((resolve,reject)=>{
+        const s=document.createElement('script');
+        s.src='https://cdn.jsdelivr.net/npm/hyparquet@1/dist/hyparquet.min.js';
+        s.onload=resolve; s.onerror=reject;
+        document.head.appendChild(s);
+      });
+    }catch(e){
+      return {error:'Could not load Parquet parser (requires internet). Please convert the file to CSV or JSON first, or ensure you have an internet connection.'};
+    }
+  }
+  try{
+    const asyncBuffer = {
+      byteLength: arrayBuffer.byteLength,
+      slice: (s,e) => Promise.resolve(arrayBuffer.slice(s,e))
+    };
+    const rows = await hyparquet.parquetReadObjects({file: asyncBuffer});
+    if(!rows||!rows.length) return {error:'Parquet file is empty.'};
+    const headers = Object.keys(rows[0]);
+    return {headers, rows: rows.map(r=>{ const o={}; headers.forEach(h=>{ o[h]=r[h]!==undefined?r[h]:''; }); return o; }), parseErrors:[]};
+  }catch(e){ return {error:'Failed to parse Parquet file: '+e.message}; }
+}
+
+// ---- Validation ----
+function diValidate(rows, headers){
+  const hmap = diMapHeaders(headers);
+  const results = [];
+  let allRequired = true;
+
+  DI_REQUIRED_COLS.forEach(rc=>{
+    const col = hmap[rc.key];
+    if(!col){
+      results.push({status:'fail', label:`Required column: "${rc.key.replace(/_/g,' ')}"`, detail:'Not found. Accepted names: '+rc.aliases.slice(0,4).join(', ')+'…'});
+      allRequired=false;
+    } else {
+      const vals = rows.map(r=>r[col]).filter(v=>v!==''&&v!==null&&v!==undefined);
+      if(vals.length===0){
+        results.push({status:'fail', label:`Column "${col}"`, detail:'All values are empty.'});
+        allRequired=false;
+      } else {
+        const isNumCol = ['revenue','employee_count','founding_year'].includes(rc.key);
+        if(isNumCol){
+          const badVals = vals.filter(v=>isNaN(Number(v)));
+          if(badVals.length>vals.length*0.3){
+            results.push({status:'warn', label:`Column "${col}"`, detail:`${badVals.length} of ${vals.length} values are non-numeric. Expected numbers for this field.`});
+          } else {
+            results.push({status:'pass', label:`Column "${col}"`, detail:`${vals.length} valid values (numeric ✓)`});
+          }
+        } else {
+          results.push({status:'pass', label:`Column "${col}"`, detail:`${vals.length} valid values`});
+        }
+      }
+    }
+  });
+
+  if(rows.length===0){
+    results.push({status:'fail', label:'Row count', detail:'File contains no data rows.'});
+    allRequired=false;
+  } else if(rows.length<2){
+    results.push({status:'warn', label:'Row count', detail:`Only ${rows.length} data row found. Add more records for meaningful analysis.`});
+  } else {
+    results.push({status:'pass', label:'Row count', detail:`${rows.length} data rows found`});
+  }
+
+  const optFound = DI_OPTIONAL_COLS.filter(o=>headers.some(h=>diNorm(h)===diNorm(o)));
+  if(optFound.length>0){
+    results.push({status:'pass', label:'Optional columns', detail:`Detected: ${optFound.join(', ')}`});
+  }
+
+  return {results, hmap, valid:allRequired};
+}
+
+// ---- Render Module ----
+function renderDataImport(){
+  _diData = { rows:[], headers:[], fileName:'', format:'', valid:false };
+  const html=`
+  <div class="module-header">
+    <h2>📥 Data Import &amp; Company Analysis</h2>
+    <p>Load company datasets in CSV, Excel (XLSX), JSON, or Parquet format for analysis and insights</p>
+  </div>
+
+  <div class="card" id="di-upload-card">
+    <div class="card-header"><h3>📂 Load Dataset</h3><span style="font-size:12px;color:var(--text2)">Drag &amp; drop or click to browse</span></div>
+    <div id="di-drop-zone" class="drop-zone"
+         onclick="document.getElementById('di-file-input').click()"
+         ondragover="event.preventDefault();this.classList.add('drag-over')"
+         ondragleave="this.classList.remove('drag-over')"
+         ondrop="diHandleDrop(event)">
+      <div class="dz-icon">📁</div>
+      <div class="dz-title">Drop your file here, or click to browse</div>
+      <div class="dz-sub">Supported: CSV &nbsp;·&nbsp; Excel (.xlsx / .xls) &nbsp;·&nbsp; JSON &nbsp;·&nbsp; Parquet (.parquet)</div>
+    </div>
+    <input type="file" id="di-file-input" style="display:none" accept=".csv,.xlsx,.xls,.json,.parquet" onchange="diHandleSelect(event)">
+    <div class="fmt-grid" style="margin-top:20px">
+      <div class="fmt-card">
+        <div class="fmt-icon">📄</div>
+        <div class="fmt-name">CSV</div>
+        <div class="fmt-desc">Comma-separated values. Works fully offline.</div>
+      </div>
+      <div class="fmt-card">
+        <div class="fmt-icon">📊</div>
+        <div class="fmt-name">Excel</div>
+        <div class="fmt-desc">.xlsx / .xls workbooks. Reads first sheet automatically.</div>
+      </div>
+      <div class="fmt-card">
+        <div class="fmt-icon">{ }</div>
+        <div class="fmt-name">JSON</div>
+        <div class="fmt-desc">Array or wrapped object. Works fully offline.</div>
+      </div>
+      <div class="fmt-card">
+        <div class="fmt-icon">🗜️</div>
+        <div class="fmt-name">Parquet</div>
+        <div class="fmt-desc">Columnar binary format. Requires internet to load parser on first use.</div>
+      </div>
+    </div>
+    <div style="margin-top:14px;padding:12px;background:rgba(67,110,224,.04);border-radius:8px;font-size:12px;color:var(--text2)">
+      <strong style="color:var(--text)">Required columns:</strong>&nbsp; company_name &nbsp;·&nbsp; industry &nbsp;·&nbsp; revenue &nbsp;·&nbsp; employee_count &nbsp;·&nbsp; founding_year &nbsp;·&nbsp; location
+      &nbsp;&nbsp;<a href="#" onclick="diShowColumnHelp();return false" style="color:var(--accent)">Column naming guide →</a>
+    </div>
+  </div>
+
+  <div id="di-result-area"></div>`;
+  document.getElementById('main-content').innerHTML=html;
+}
+
+function diShowColumnHelp(){
+  showModal(`<div class="modal-box" style="max-width:680px">
+    <h3>📋 Column Naming Guide</h3>
+    <p style="color:var(--text2);font-size:13px;margin-bottom:16px">The import module recognises flexible column name variations. Use any of these in your file:</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Required Field</th><th>Accepted Column Names</th><th>Type</th></tr></thead>
+      <tbody>
+        ${DI_REQUIRED_COLS.map(rc=>`<tr>
+          <td><strong>${rc.key}</strong></td>
+          <td style="font-size:11px">${rc.aliases.join(', ')}</td>
+          <td style="font-size:12px;color:var(--text2)">${['revenue','employee_count','founding_year'].includes(rc.key)?'Number':'Text'}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table></div>
+    <div style="margin-top:14px;font-size:12px;color:var(--text2)">
+      <strong>Optional columns</strong> (detected automatically if present): ${DI_OPTIONAL_COLS.join(', ')}
+    </div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal()">Close</button></div>
+  </div>`);
+}
+
+// ---- File Handlers ----
+function diHandleDrop(ev){
+  ev.preventDefault();
+  document.getElementById('di-drop-zone').classList.remove('drag-over');
+  const f = ev.dataTransfer.files[0];
+  if(f) diProcessFile(f);
+}
+function diHandleSelect(ev){
+  const f = ev.target.files[0];
+  if(f) diProcessFile(f);
+  ev.target.value='';
+}
+
+function diProcessFile(file){
+  const name = file.name;
+  const ext  = name.split('.').pop().toLowerCase();
+  const validExts = ['csv','xlsx','xls','json','parquet'];
+  if(!validExts.includes(ext)){
+    diShowError([`Unsupported file type ".${ext}". Please upload a CSV, Excel (.xlsx / .xls), JSON, or Parquet file.`]);
+    return;
+  }
+  document.getElementById('di-result-area').innerHTML=`<div class="card"><div style="text-align:center;padding:32px;color:var(--text2)">⏳ Parsing <strong>${name}</strong>…</div></div>`;
+
+  const reader = new FileReader();
+
+  if(ext==='csv'){
+    reader.onload = e => { const r=parseCSV(e.target.result); diAfterParse(r,name,'CSV'); };
+    reader.readAsText(file,'UTF-8');
+  } else if(ext==='json'){
+    reader.onload = e => { const r=parseJSON(e.target.result); diAfterParse(r,name,'JSON'); };
+    reader.readAsText(file,'UTF-8');
+  } else if(ext==='xlsx'||ext==='xls'){
+    reader.onload = async e => {
+      if(!window.XLSX){
+        document.getElementById('di-result-area').innerHTML=`<div class="card"><div style="text-align:center;padding:24px;color:var(--text2)">📦 Loading Excel parser from CDN… (requires internet)</div></div>`;
+        await new Promise((res,rej)=>{
+          const s=document.createElement('script');
+          s.src='https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.mini.min.js';
+          s.onload=res; s.onerror=()=>rej(new Error('CDN unavailable'));
+          document.head.appendChild(s);
+        }).catch(()=>{});
+      }
+      const r=parseXLSX(e.target.result);
+      diAfterParse(r,name,'Excel');
+    };
+    reader.readAsArrayBuffer(file);
+  } else if(ext==='parquet'){
+    reader.onload = async e => {
+      document.getElementById('di-result-area').innerHTML=`<div class="card"><div style="text-align:center;padding:24px;color:var(--text2)">📦 Loading Parquet parser from CDN… (requires internet)</div></div>`;
+      const r = await parseParquet(e.target.result);
+      diAfterParse(r,name,'Parquet');
+    };
+    reader.readAsArrayBuffer(file);
+  }
+}
+
+function diAfterParse(result, fileName, format){
+  if(result.error){
+    diShowError([`Parse error: ${result.error}`]);
+    return;
+  }
+  if(result.parseErrors && result.parseErrors.length){
+    showToast(`⚠️ ${result.parseErrors.length} row(s) skipped (column count mismatch)`, 'warning', 5000);
+  }
+  _diData.rows    = result.rows;
+  _diData.headers = result.headers;
+  _diData.fileName= fileName;
+  _diData.format  = format;
+  _diData.valid   = false;
+
+  const validation = diValidate(result.rows, result.headers);
+  _diData.hmap  = validation.hmap;
+  _diData.valid = validation.valid;
+
+  diRenderValidationAndPreview(validation, result.rows, result.headers, fileName, format);
+  addAuditLog('DATA_IMPORT_LOAD', `File loaded: ${fileName} (${format}, ${result.rows.length} rows)`);
+}
+
+function diShowError(msgs){
+  document.getElementById('di-result-area').innerHTML=`
+  <div class="di-error-box">
+    <div style="font-weight:700;font-size:14px;color:var(--danger)">❌ File Load Error</div>
+    <ul>${msgs.map(m=>`<li>${m}</li>`).join('')}</ul>
+    <div style="margin-top:10px;font-size:12px;color:var(--text2)">Please fix the issue and upload the file again, or check the <a href="#" onclick="diShowColumnHelp();return false" style="color:var(--accent)">column naming guide</a>.</div>
+  </div>`;
+}
+
+function diRenderValidationAndPreview(validation, rows, headers, fileName, format){
+  const {results, hmap, valid} = validation;
+  const passCount  = results.filter(r=>r.status==='pass').length;
+  const failCount  = results.filter(r=>r.status==='fail').length;
+  const warnCount  = results.filter(r=>r.status==='warn').length;
+
+  const statusIcon = {pass:'✅',fail:'❌',warn:'⚠️'};
+  const previewRows = rows.slice(0,10);
+
+  const html=`
+  <div class="card">
+    <div class="card-header">
+      <h3>🔍 Validation Results</h3>
+      <div style="display:flex;align-items:center;gap:12px;font-size:12px">
+        <span style="color:var(--text2)">${fileName} &nbsp;·&nbsp; ${format} &nbsp;·&nbsp; ${rows.length} rows &nbsp;·&nbsp; ${headers.length} cols</span>
+        <span style="color:var(--success)">✅ ${passCount}</span>
+        <span style="color:var(--warning)">⚠️ ${warnCount}</span>
+        <span style="color:var(--danger)">❌ ${failCount}</span>
+      </div>
+    </div>
+    ${!valid?`<div class="di-error-box" style="margin-bottom:12px">
+      <div style="font-weight:700;color:var(--danger)">⛔ Required columns are missing — fix the errors below before you can run analysis.</div>
+      <div style="font-size:12px;color:var(--text2);margin-top:6px">Tip: Check the <a href="#" onclick="diShowColumnHelp();return false" style="color:var(--accent)">column naming guide</a> for accepted column name variations.</div>
+    </div>`:''}
+    ${results.map(r=>`
+      <div class="val-row ${r.status}">
+        <span class="val-icon">${statusIcon[r.status]}</span>
+        <span class="val-label">${r.label}</span>
+        <span class="val-detail">${r.detail}</span>
+      </div>`).join('')}
+    <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn btn-secondary btn-sm" onclick="diTogglePreview()">👁️ Toggle Data Preview</button>
+      ${valid?`<button class="btn btn-primary" onclick="diImportAndAnalyse()">📊 Import &amp; Analyse</button>`:''}
+      <button class="btn btn-secondary btn-sm" onclick="renderDataImport()">↩ Load Another File</button>
+    </div>
+  </div>
+
+  <div class="card" id="di-preview-card">
+    <div class="card-header">
+      <h3>👁️ Data Preview</h3>
+      <span style="font-size:12px;color:var(--text2)">Showing first ${previewRows.length} of ${rows.length} rows</span>
+    </div>
+    <div class="preview-wrap">
+      <table>
+        <thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead>
+        <tbody>
+          ${previewRows.map(row=>`<tr>${headers.map(h=>{
+            const v=row[h];
+            const disp = (v!==undefined&&v!=='')?String(v):'';
+            return `<td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${disp.replace(/"/g,'&quot;')}">${disp||'<span style="color:var(--text2)">—</span>'}</td>`;
+          }).join('')}</tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="di-analysis-area"></div>`;
+
+  document.getElementById('di-result-area').innerHTML=html;
+}
+
+function diTogglePreview(){
+  const card=document.getElementById('di-preview-card');
+  if(card) card.style.display=card.style.display==='none'?'':'none';
+}
+
+// ---- Analysis ----
+function diImportAndAnalyse(){
+  if(!_diData.valid||!_diData.rows.length){ showToast('Cannot analyse — fix validation errors first','error'); return; }
+  const {rows,hmap} = _diData;
+
+  function getVal(row,key){ const c=hmap[key]; return c?row[c]:null; }
+
+  const allCompanies = rows.map(r=>({
+    name:     String(getVal(r,'company_name')||'Unknown'),
+    industry: String(getVal(r,'industry')||'Unknown'),
+    revenue:  Number(getVal(r,'revenue'))||0,
+    employees:Number(getVal(r,'employee_count'))||0,
+    founded:  Number(getVal(r,'founding_year'))||0,
+    location: String(getVal(r,'location')||'Unknown')
+  }));
+
+  const total    = allCompanies.length;
+  const totalRev = allCompanies.reduce((s,c)=>s+c.revenue,0);
+  const avgRev   = total?Math.round(totalRev/total):0;
+  const totalEmp = allCompanies.reduce((s,c)=>s+c.employees,0);
+  const avgEmp   = total?Math.round(totalEmp/total):0;
+  const foundedYrs = allCompanies.map(c=>c.founded).filter(y=>y>1800&&y<=new Date().getFullYear());
+  const avgFounded = foundedYrs.length?Math.round(foundedYrs.reduce((s,y)=>s+y,0)/foundedYrs.length):0;
+
+  // Industry distribution
+  const indMap={};
+  allCompanies.forEach(c=>{ indMap[c.industry]=(indMap[c.industry]||0)+1; });
+  const indSorted = Object.entries(indMap).sort((a,b)=>b[1]-a[1]);
+  const maxInd = indSorted[0]?indSorted[0][1]:1;
+
+  // Revenue brackets
+  const revBrackets=[
+    {label:'< $100M',   min:0,          max:100000000},
+    {label:'$100M–$1B', min:100000000,  max:1000000000},
+    {label:'$1B–$5B',   min:1000000000, max:5000000000},
+    {label:'> $5B',     min:5000000000, max:Infinity}
+  ];
+  const revDist = revBrackets.map(b=>({...b, count:allCompanies.filter(c=>c.revenue>=b.min&&c.revenue<b.max).length}));
+  const maxRev  = Math.max(...revDist.map(b=>b.count),1);
+
+  // Employee distribution
+  const empBrackets=[
+    {label:'< 1,000',  min:0,     max:1000},
+    {label:'1K–10K',   min:1000,  max:10000},
+    {label:'10K–50K',  min:10000, max:50000},
+    {label:'> 50K',    min:50000, max:Infinity}
+  ];
+  const empDist = empBrackets.map(b=>({...b, count:allCompanies.filter(c=>c.employees>=b.min&&c.employees<b.max).length}));
+  const maxEmpD = Math.max(...empDist.map(b=>b.count),1);
+
+  // Location distribution
+  const locMap={};
+  allCompanies.forEach(c=>{
+    const loc = c.location.split(',')[0].trim();
+    locMap[loc]=(locMap[loc]||0)+1;
+  });
+  const locSorted = Object.entries(locMap).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const maxLoc = locSorted[0]?locSorted[0][1]:1;
+
+  // Top companies by revenue
+  const topRevenue = [...allCompanies].sort((a,b)=>b.revenue-a.revenue).slice(0,5);
+
+  // Oldest and newest
+  const withYears = allCompanies.filter(c=>c.founded>1800);
+  const oldest = withYears.length?withYears.reduce((a,b)=>a.founded<b.founded?a:b):null;
+  const newest = withYears.length?withYears.reduce((a,b)=>a.founded>b.founded?a:b):null;
+
+  function fmtRev(n){
+    if(n>=1e9) return '$'+(n/1e9).toFixed(1)+'B';
+    if(n>=1e6) return '$'+(n/1e6).toFixed(1)+'M';
+    if(n>=1e3) return '$'+(n/1e3).toFixed(1)+'K';
+    return '$'+n;
+  }
+
+  const html=`
+  <div class="card">
+    <div class="card-header">
+      <h3>📊 Company Analysis — ${_diData.fileName}</h3>
+      <div class="card-actions">
+        <button class="btn btn-secondary btn-sm" onclick="diExportAnalysis()">⬇ Export CSV</button>
+        <button class="btn btn-secondary btn-sm" onclick="renderDataImport()">↩ Load New File</button>
+      </div>
+    </div>
+
+    <div class="grid-4" style="margin-bottom:20px">
+      <div class="stat-mini"><div class="sm-val">${total}</div><div class="sm-lbl">Companies</div></div>
+      <div class="stat-mini"><div class="sm-val">${indSorted.length}</div><div class="sm-lbl">Industries</div></div>
+      <div class="stat-mini"><div class="sm-val">${fmtRev(avgRev)}</div><div class="sm-lbl">Avg Revenue</div></div>
+      <div class="stat-mini"><div class="sm-val">${avgEmp.toLocaleString()}</div><div class="sm-lbl">Avg Employees</div></div>
+    </div>
+
+    <div class="grid-2" style="margin-bottom:20px">
+      <div>
+        <div style="font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Industry Distribution</div>
+        <div class="bar-chart">
+          ${indSorted.slice(0,10).map(([ind,cnt])=>`
+            <div class="bar-row">
+              <div class="bar-label" style="width:160px" title="${ind}">${ind.length>22?ind.slice(0,21)+'…':ind}</div>
+              <div class="bar-track"><div class="bar-fill" style="width:${Math.round(cnt/maxInd*100)}%"></div></div>
+              <div class="bar-value">${cnt}</div>
+            </div>`).join('')}
+        </div>
+      </div>
+      <div>
+        <div style="font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Geographic Distribution</div>
+        <div class="bar-chart">
+          ${locSorted.map(([loc,cnt])=>`
+            <div class="bar-row">
+              <div class="bar-label" style="width:130px">${loc}</div>
+              <div class="bar-track"><div class="bar-fill" style="width:${Math.round(cnt/maxLoc*100)}%;background:var(--success)"></div></div>
+              <div class="bar-value">${cnt}</div>
+            </div>`).join('')}
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-2" style="margin-bottom:20px">
+      <div>
+        <div style="font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Revenue Distribution</div>
+        <div class="bar-chart">
+          ${revDist.map(b=>`
+            <div class="bar-row">
+              <div class="bar-label" style="width:130px">${b.label}</div>
+              <div class="bar-track"><div class="bar-fill" style="width:${Math.round(b.count/maxRev*100)}%;background:var(--warning)"></div></div>
+              <div class="bar-value">${b.count}</div>
+            </div>`).join('')}
+        </div>
+      </div>
+      <div>
+        <div style="font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Employee Scale</div>
+        <div class="bar-chart">
+          ${empDist.map(b=>`
+            <div class="bar-row">
+              <div class="bar-label" style="width:130px">${b.label}</div>
+              <div class="bar-track"><div class="bar-fill" style="width:${Math.round(b.count/maxEmpD*100)}%;background:var(--info)"></div></div>
+              <div class="bar-value">${b.count}</div>
+            </div>`).join('')}
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-bottom:20px">
+      <div style="font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Top 5 Companies by Revenue</div>
+      ${makeTable(
+        ['Rank','Company Name','Industry','Revenue','Employees','Founded'],
+        topRevenue.map((c,i)=>[
+          `<span style="font-weight:700;color:var(--accent)">#${i+1}</span>`,
+          `<strong>${c.name}</strong>`,
+          `<span class="tag">${c.industry}</span>`,
+          `<span style="color:var(--success);font-weight:700">${fmtRev(c.revenue)}</span>`,
+          c.employees.toLocaleString(),
+          c.founded||'—'
+        ])
+      )}
+    </div>
+
+    <div style="padding:14px;background:rgba(67,110,224,.05);border-radius:10px;font-size:13px">
+      <div style="font-weight:700;margin-bottom:8px;color:var(--text)">💡 Key Insights</div>
+      <ul style="padding-left:20px;color:var(--text2);line-height:1.9">
+        <li>Total combined revenue: <strong style="color:var(--text)">${fmtRev(totalRev)}</strong></li>
+        <li>Total combined workforce: <strong style="color:var(--text)">${totalEmp.toLocaleString()} employees</strong></li>
+        <li>Dominant industry: <strong style="color:var(--text)">${indSorted[0]?indSorted[0][0]+' ('+indSorted[0][1]+' companies)':'—'}</strong></li>
+        <li>Most common HQ city: <strong style="color:var(--text)">${locSorted[0]?locSorted[0][0]+' ('+locSorted[0][1]+' companies)':'—'}</strong></li>
+        ${oldest?`<li>Oldest company: <strong style="color:var(--text)">${oldest.name}</strong> (founded ${oldest.founded})</li>`:''}
+        ${newest?`<li>Newest company: <strong style="color:var(--text)">${newest.name}</strong> (founded ${newest.founded})</li>`:''}
+        ${avgFounded?`<li>Average founding year: <strong style="color:var(--text)">${avgFounded}</strong></li>`:''}
+      </ul>
+    </div>
+  </div>`;
+
+  document.getElementById('di-analysis-area').innerHTML=html;
+  document.getElementById('di-analysis-area').scrollIntoView({behavior:'smooth',block:'start'});
+  addAuditLog('DATA_IMPORT_ANALYSE', `Analysis run: ${_diData.fileName}, ${total} companies, ${indSorted.length} industries`);
+  showToast('Analysis complete ✅','success');
+}
+
+function diExportAnalysis(){
+  const {rows, headers, fileName} = _diData;
+  if(!rows.length){ showToast('No data to export','error'); return; }
+  const csv = [headers, ...rows.map(r=>headers.map(h=>r[h]))].map(r=>r.map(csvEscape).join(',')).join('\r\n');
+  const blob = new Blob([csv],{type:'text/csv'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href=url; a.download='AIVTS_ImportedData_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click(); URL.revokeObjectURL(url);
+  showToast('Data exported to CSV','success');
+  addAuditLog('DATA_IMPORT_EXPORT',`Imported dataset exported: ${fileName}`);
+}
 
 // ============================================================
 // MODULE ROUTER
@@ -2364,7 +3001,8 @@ const MODULES = {
   allocation:renderAllocation,
   alerts:    renderAlerts,
   reports:   renderReports,
-  userroles: renderUserRoles
+  userroles: renderUserRoles,
+  dataimport:renderDataImport
 };
 
 // ============================================================
