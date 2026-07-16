@@ -90,6 +90,8 @@ A comprehensive PDF user guide is available in [`/docs/AIVTS_User_Guide.pdf`](./
 - FAQ (14 questions)
 - Appendix: file structure, audit log reference, keyboard tips
 
+A print-ready, A4 one-page executive poster is available at [`/docs/AIVTS_Executive_Poster.html`](./docs/AIVTS_Executive_Poster.html).
+
 ## 💾 Data Storage
 
 All inventory data is stored in your browser's **localStorage** — no data leaves your device.

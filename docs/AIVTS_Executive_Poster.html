@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AIVTS Executive One-Page Poster</title>
+<style>
+@page{size:A4;margin:0}
+*{box-sizing:border-box}
+body{margin:0;background:#d8deea;font-family:"Segoe UI",Arial,sans-serif;color:#17233c}
+.page{width:210mm;height:297mm;margin:0 auto;background:linear-gradient(180deg,#f8fbff 0%,#eef4fb 100%);padding:16mm 15mm;position:relative;overflow:hidden}
+.page::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 12% 8%,rgba(52,100,210,.18),transparent 24%),radial-gradient(circle at 88% 14%,rgba(16,185,129,.16),transparent 24%);pointer-events:none}
+.content{position:relative;z-index:1}
+.eyebrow{display:inline-block;padding:4px 10px;border-radius:999px;background:#e6efff;color:#2556b8;font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}
+h1{margin:10px 0 8px;font-size:34px;line-height:1.05;letter-spacing:-.04em;color:#0c1730}
+.subtitle{font-size:16px;line-height:1.45;color:#43516a;max-width:168mm}
+.hero{margin-top:12mm;padding:9mm;border-radius:18px;background:linear-gradient(135deg,#10244d 0%,#163b83 58%,#2362d1 100%);color:#fff;box-shadow:0 16px 42px rgba(31,63,125,.22)}
+.hero h2{margin:0 0 5mm;font-size:20px;letter-spacing:-.02em}
+.hero-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5mm}
+.metric{padding:5mm;border-radius:14px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18)}
+.metric strong{display:block;font-size:22px;line-height:1;margin-bottom:3mm}
+.metric span{font-size:11px;line-height:1.35;color:#dce8ff}
+.section-title{margin:10mm 0 4mm;font-size:16px;color:#0c1730;letter-spacing:-.02em}
+.value-grid{display:grid;grid-template-columns:1fr 1fr;gap:5mm}
+.card{padding:6mm;border-radius:16px;background:#fff;border:1px solid #d9e2f0;box-shadow:0 8px 24px rgba(31,63,125,.08)}
+.card h3{margin:0 0 3mm;font-size:14px;color:#14326d}
+.card p{margin:0;font-size:12px;line-height:1.48;color:#4d5c73}
+.outcomes{display:grid;grid-template-columns:repeat(4,1fr);gap:4mm;margin-top:5mm}
+.outcome{min-height:25mm;padding:5mm;border-radius:14px;background:#f8fbff;border:1px solid #d9e2f0;text-align:center}
+.outcome b{display:block;font-size:18px;color:#153e8a;margin-bottom:2mm}
+.outcome span{display:block;font-size:10.5px;line-height:1.35;color:#536176}
+.bottom{display:grid;grid-template-columns:1.2fr .8fr;gap:5mm;margin-top:8mm}
+.callout{padding:7mm;border-radius:18px;background:#eaf7f1;border:1px solid #cbeadb}
+.callout h2{margin:0 0 3mm;font-size:17px;color:#07623f}
+.callout p{margin:0;font-size:12px;line-height:1.5;color:#355346}
+.audience{padding:7mm;border-radius:18px;background:#fff;border:1px solid #d9e2f0}
+.audience h2{margin:0 0 3mm;font-size:17px;color:#0c1730}
+ul{margin:0;padding-left:5mm;color:#4d5c73;font-size:12px;line-height:1.6}
+.footer{position:absolute;left:15mm;right:15mm;bottom:12mm;display:flex;align-items:center;justify-content:space-between;padding-top:4mm;border-top:1px solid #cfd9e8;color:#65738a;font-size:10.5px}
+.brand{font-weight:800;color:#14326d}
+@media print{body{background:#fff}.page{margin:0;box-shadow:none}}
+</style>
+</head>
+<body>
+<main class="page" aria-label="A4 executive poster for Automotive Inventory Visibility and Tracking System">
+  <div class="content">
+    <span class="eyebrow">Executive Brief</span>
+    <h1>Automotive Inventory Visibility and Tracking System</h1>
+    <p class="subtitle">A management-focused platform that gives leaders a clear, real-time view of inventory health, operational risk, and working-capital opportunities across vehicles, parts, suppliers, and locations.</p>
+
+    <section class="hero">
+      <h2>What leaders gain</h2>
+      <div class="hero-grid">
+        <div class="metric"><strong>Visibility</strong><span>One trusted view of stock, movement, delays, aging, damage, and availability.</span></div>
+        <div class="metric"><strong>Control</strong><span>Faster prioritization of shortages, exceptions, supplier issues, and escalations.</span></div>
+        <div class="metric"><strong>Value</strong><span>Better decisions to reduce holding cost, missed sales, write-offs, and manual follow-ups.</span></div>
+      </div>
+    </section>
+
+    <h2 class="section-title">Business outcomes that matter to executives</h2>
+    <section class="value-grid">
+      <div class="card"><h3>Protect revenue</h3><p>Improve stock availability for dealer bookings and customer commitments by highlighting gaps before they become lost opportunities.</p></div>
+      <div class="card"><h3>Reduce working capital pressure</h3><p>Identify slow-moving inventory, excess stock, and reorder priorities so capital is not locked in the wrong products.</p></div>
+      <div class="card"><h3>Strengthen operational governance</h3><p>Track accountability across stock audits, damage cases, supplier performance, and escalation workflows.</p></div>
+      <div class="card"><h3>Improve decision speed</h3><p>Replace fragmented updates with management dashboards, exception alerts, and exportable reports for review meetings.</p></div>
+    </section>
+
+    <section class="outcomes" aria-label="Executive scorecard themes">
+      <div class="outcome"><b>Sales</b><span>More confidence in available-to-promise inventory</span></div>
+      <div class="outcome"><b>Finance</b><span>Sharper view of stock value, aging, and exposure</span></div>
+      <div class="outcome"><b>Operations</b><span>Earlier action on delays, mismatches, and bottlenecks</span></div>
+      <div class="outcome"><b>Service</b><span>Better readiness for spare parts and fulfillment needs</span></div>
+    </section>
+
+    <section class="bottom">
+      <div class="callout">
+        <h2>Why it is executive-ready</h2>
+        <p>The tool turns day-to-day inventory activity into a concise management view: where stock is, what needs attention, who owns the next action, and which risks can affect revenue, cost, customer experience, or compliance.</p>
+      </div>
+      <div class="audience">
+        <h2>Best suited for</h2>
+        <ul>
+          <li>CEO / COO reviews</li>
+          <li>Finance and working-capital meetings</li>
+          <li>Sales and dealer allocation planning</li>
+          <li>Warehouse and supply-chain governance</li>
+        </ul>
+      </div>
+    </section>
+  </div>
+  <footer class="footer">
+    <span class="brand">AIVTS</span>
+    <span>One-page A4 poster for executive and management audiences</span>
+  </footer>
+</main>
+</body>
+</html>
