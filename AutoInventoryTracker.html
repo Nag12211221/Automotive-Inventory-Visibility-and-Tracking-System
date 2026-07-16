@@ -336,8 +336,8 @@ function updateAlertBadge(){
   if(badge){badge.textContent=alerts.length; badge.style.display=alerts.length?'':'none';}
 }
 function showDashboardTour(){
-  // Skip if either old or new tour flag is already set
-  if(localStorage.getItem('aivts_onboarding_shown')||localStorage.getItem('aivts_tour_v2'))return;
+// Skip if either old (legacy) or new tour flag is already set
+  if(localStorage.getItem('aivts_tour_v2'))return;
 
   const steps=[
     {
@@ -572,7 +572,7 @@ function renderDashboard(){
         ${Object.entries(vByStatus).map(([s,c])=>`
           <div class="bar-row">
             <div class="bar-label">${s}</div>
-            <div class="bar-track"><div class="bar-fill" style="width:${Math.round(c/vehicles.length*100)}%;background:${s==='Available'?'var(--success)':s==='Damaged'?'var(--danger)':s==='In Transit'?'var(--accent)':'var(--warning)'}"></div></div>
+            <div class="bar-track"><div class="bar-fill" style="width:${vehicles.length>0?Math.round(c/vehicles.length*100):0}%;background:${s==='Available'?'var(--success)':s==='Damaged'?'var(--danger)':s==='In Transit'?'var(--accent)':'var(--warning)'}"></div></div>
             <div class="bar-value">${c}</div>
           </div>`).join('')}
       </div>
