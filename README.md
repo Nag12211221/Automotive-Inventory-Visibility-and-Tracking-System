@@ -39,7 +39,7 @@ A fully standalone, zero-dependency web application for real-time automotive inv
 ## 💾 Data Storage
 
 All data is stored in your browser's **localStorage** — no data leaves your device.
-Use the **"Reset to Sample Data"** button in the sidebar to reload demo data at any time.
+Use the **"Clear All Data"** button in the sidebar to permanently delete all stored data and start fresh.
 
 ## 🖥️ System Requirements
 
