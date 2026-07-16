@@ -1,0 +1,21 @@
+company_name,industry,revenue,employee_count,founding_year,location,headquarters,website,ceo,stock_symbol,market_cap,description
+Tata Motors Ltd,Automobile Manufacturing,3440000000,82000,1945,"Mumbai, India",Mumbai,www.tatamotors.com,Shailesh Chandra,TATAMOTORS,25000000000,One of India's largest automobile manufacturers
+Mahindra & Mahindra,Automobile Manufacturing,1980000000,40000,1945,"Mumbai, India",Mumbai,www.mahindra.com,Anish Shah,M&M,19000000000,Leading SUV and tractor manufacturer
+Maruti Suzuki India,Automobile Manufacturing,4100000000,37000,1981,"New Delhi, India",New Delhi,www.marutisuzuki.com,Hisashi Takeuchi,MARUTI,40000000000,India's largest passenger car manufacturer
+Hyundai Motor India,Automobile Manufacturing,5200000000,8500,1996,"Chennai, India",Chennai,www.hyundai.com/in,Unsoo Kim,HYUNDAI,21000000000,Second largest car maker in India
+Hero MotoCorp,Two-Wheeler Manufacturing,3750000000,10000,1984,"New Delhi, India",New Delhi,www.heromotocorp.com,Niranjan Gupta,HEROMOTOCO,12000000000,World's largest two-wheeler manufacturer
+Bajaj Auto,Two-Wheeler Manufacturing,4300000000,9800,1945,"Pune, India",Pune,www.bajajauto.com,Rajiv Bajaj,BAJAJ-AUTO,22000000000,Global two- and three-wheeler manufacturer
+TVS Motor Company,Two-Wheeler Manufacturing,3100000000,7200,1978,"Chennai, India",Chennai,www.tvsmotor.com,K N Radhakrishnan,TVSMOTOR,14000000000,India's third largest two-wheeler manufacturer
+Ashok Leyland,Commercial Vehicles,4560000000,12000,1948,"Chennai, India",Chennai,www.ashokleyland.com,Shenu Agarwal,ASHOKLEY,8900000000,India's second largest commercial vehicle maker
+Eicher Motors,Automobile Manufacturing,3800000000,10500,1948,"New Delhi, India",New Delhi,www.eichermotors.com,Siddhartha Lal,EICHERMOT,29000000000,Maker of Royal Enfield motorcycles and commercial vehicles
+Bosch India,Auto Components,2800000000,31000,1951,"Bangalore, India",Bangalore,www.bosch.in,Guruprasad Mudlapur,BOSCHLTD,18000000000,Leading automotive supplier and technology company
+Motherson Sumi Systems,Auto Components,9100000000,167000,1975,"Noida, India",Noida,www.motherson.com,Vivek Chaand Sehgal,MOTHERSON,16000000000,Global automotive component manufacturer
+Minda Industries,Auto Components,3200000000,26000,1958,"Gurgaon, India",Gurgaon,www.mindasystems.com,Nirmal K Minda,MINDAIND,7800000000,Auto component manufacturer specializing in lighting and switches
+Apollo Tyres,Tyre Manufacturing,2900000000,16000,1972,"Gurgaon, India",Gurgaon,www.apollotyres.com,Neeraj Kanwar,APOLLOTYRE,6500000000,India's largest tyre manufacturer by revenue
+MRF Limited,Tyre Manufacturing,2700000000,18000,1946,"Chennai, India",Chennai,www.mrftyres.com,KM Mammen,MRF,19000000000,India's largest tyre manufacturer by market cap
+Exide Industries,Battery Manufacturing,1500000000,7800,1947,"Kolkata, India",Kolkata,www.exideindustries.com,Subir Chakraborty,EXIDEIND,5200000000,India's leading storage battery manufacturer
+Sundram Fasteners,Auto Components,780000000,7500,1966,"Chennai, India",Chennai,www.sundram.com,Suresh Krishna,SUNDRMFAST,4100000000,Manufacturer of high-tensile fasteners and auto components
+Bharat Forge,Forging & Engineering,1900000000,14000,1961,"Pune, India",Pune,www.bharatforge.com,BN Kalyani,BHARATFORG,13000000000,World's second largest forging company
+Force Motors,Automobile Manufacturing,680000000,5200,1958,"Pune, India",Pune,www.forcemotors.com,Prasan Firodia,FORCEMOT,2400000000,Manufacturer of utility vehicles and LCVs
+SML Isuzu,Commercial Vehicles,420000000,3800,1983,"Chandigarh, India",Chandigarh,www.smlisuzu.com,Yoshinori Ohno,SMLISUZU,1200000000,Manufacturer of buses and trucks
+Varroc Engineering,Auto Components,1100000000,13000,1988,"Pune, India",Pune,www.varroc.com,Tarang Jain,VARROC,3100000000,Global auto component and lighting solutions provider

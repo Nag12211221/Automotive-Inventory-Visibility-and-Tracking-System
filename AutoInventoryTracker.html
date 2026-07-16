@@ -1,0 +1,3034 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Automotive Inventory Visibility and Tracking System</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#06091a;--bg2:#0a0f22;--sidebar:#0a0f22;--card:#0e1428;--card2:#121930;
+  --border:rgba(67,110,224,0.18);--accent:#436ee0;--accent2:#6088ec;--accent-glow:rgba(67,110,224,0.22);
+  --success:#10c98a;--warning:#f09c38;--danger:#e64c5c;--info:#22b8e4;--text:#dce2f0;--text2:#68768f;
+  --input:#050817;--radius:10px;--shadow:0 8px 32px rgba(0,0,0,.65),inset 0 1px 0 rgba(67,110,224,.07);
+}
+body{font-family:'Segoe UI',system-ui,sans-serif;letter-spacing:.01em;background:radial-gradient(ellipse at top,#0d1430 0%,#06091a 65%);color:var(--text);min-height:100vh;overflow:hidden}
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px;background:radial-gradient(ellipse at 50% 20%,#0e1535 0%,#06091a 70%)}
+.login-card,.card,.stat-card,.modal-box,.toast,.alert-item,.vehicle-card{background:linear-gradient(145deg,#0e1428 0%,#0b1020 100%);border:1px solid rgba(67,110,224,0.16);border-radius:var(--radius);box-shadow:0 8px 32px rgba(0,0,0,.65),inset 0 1px 0 rgba(67,110,224,.06)}
+.login-card{padding:44px 40px;width:430px;box-shadow:0 0 80px rgba(67,110,224,.1),0 4px 40px rgba(0,0,0,.85),inset 0 1px 0 rgba(67,110,224,.08)}
+.login-logo{text-align:center;margin-bottom:28px}
+.login-logo .icon{display:inline-flex;align-items:center;justify-content:center;width:76px;height:76px;margin-bottom:14px;border-radius:20px;background:rgba(67,110,224,.08);border:1px solid rgba(67,110,224,.24);box-shadow:0 0 32px rgba(67,110,224,.14),inset 0 1px 0 rgba(67,110,224,.1)}
+.login-logo h1{font-size:19px;font-weight:700;color:var(--accent2);line-height:1.35;letter-spacing:-.01em}
+.login-logo p{font-size:11px;color:var(--text2);margin-top:7px;letter-spacing:.04em;text-transform:uppercase}
+.form-group{margin-bottom:18px}
+.form-group label{display:block;font-size:12px;color:var(--text2);margin-bottom:7px;font-weight:600;letter-spacing:.03em;text-transform:uppercase}
+.form-group input,.form-group select{width:100%;padding:11px 13px;background:rgba(5,8,23,.9);border:1px solid rgba(67,110,224,.14);border-radius:8px;color:var(--text);font-size:14px;outline:none;transition:border .2s,box-shadow .2s,background .2s}
+.form-group input:focus,.form-group select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(67,110,224,.14);background:rgba(10,15,34,.95)}
+.form-group select option{background:var(--card);color:var(--text)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 18px;border:1px solid transparent;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:transform .15s ease,box-shadow .2s ease,opacity .18s ease,filter .15s ease}
+.btn:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.btn:active{transform:scale(.98);filter:brightness(.96)}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none;filter:none}
+.btn-primary{background:linear-gradient(135deg,#436ee0 0%,#2b51c8 100%);color:#fff;font-weight:700;box-shadow:0 4px 18px rgba(67,110,224,.32)}
+.btn-success{background:linear-gradient(135deg,#10c98a 0%,#0ca471 100%);color:#041a10;box-shadow:0 4px 15px rgba(16,201,138,.22)}
+.btn-warning{background:linear-gradient(135deg,#f09c38 0%,#d07c1a 100%);color:#160b01;box-shadow:0 4px 15px rgba(240,156,56,.22)}
+.btn-danger{background:linear-gradient(135deg,#e64c5c 0%,#c43248 100%);color:#fff;box-shadow:0 4px 15px rgba(230,76,92,.24)}
+.btn-secondary{background:rgba(67,110,224,.07);border:1px solid rgba(67,110,224,.24);color:var(--accent2);box-shadow:inset 0 1px 0 rgba(67,110,224,.06)}
+.btn-sm{padding:6px 12px;font-size:12px}
+.btn-full{width:100%;justify-content:center;padding:13px}
+#app{display:none;height:100vh;flex-direction:column}
+#app.active{display:flex}
+#app-header{background:linear-gradient(90deg,#09102a 0%,#0d1530 100%);border-bottom:1px solid rgba(67,110,224,.16);padding:0 20px;height:56px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;z-index:100;box-shadow:0 4px 24px rgba(0,0,0,.4)}
+.header-left{display:flex;align-items:center;gap:12px}
+.header-left .brand-icon{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:10px;background:rgba(67,110,224,.09);border:1px solid rgba(67,110,224,.2)}
+.header-left .app-title{font-size:14px;font-weight:700;color:var(--accent2);letter-spacing:-.01em}
+.header-left .app-subtitle{font-size:11px;color:var(--text2)}
+.header-right{display:flex;align-items:center;gap:12px}
+.user-badge{background:rgba(255,255,255,.02);border:1px solid rgba(67,110,224,.14);border-radius:20px;padding:6px 14px;font-size:12px;display:flex;align-items:center;gap:6px}
+.user-badge .role-chip{background:linear-gradient(135deg,#436ee0 0%,#2b51c8 100%);color:#fff;border-radius:8px;padding:2px 9px;font-size:10px;font-weight:700;letter-spacing:.03em}
+#app-body{display:flex;flex:1;overflow:hidden}
+#sidebar{width:224px;background:linear-gradient(180deg,#09102a 0%,#06091a 100%);border-right:1px solid rgba(67,110,224,.12);overflow-y:auto;flex-shrink:0;padding:12px 0}
+.sidebar-section{padding:0 12px;margin-bottom:4px}
+.sidebar-section-title{font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1px;padding:8px 8px 4px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:0 8px 8px 0;cursor:pointer;transition:background .18s,color .18s,border-color .18s;font-size:13px;color:var(--text2);user-select:none;border-left:2px solid transparent}
+.nav-item:hover{background:rgba(67,110,224,.07);color:var(--text)}
+.nav-item.active{background:linear-gradient(90deg,rgba(67,110,224,.18) 0%,rgba(67,110,224,.04) 100%);border-left:2px solid var(--accent);color:var(--accent2)}
+.nav-item .nav-icon{font-size:15px;width:20px;text-align:center;flex-shrink:0}
+.nav-item .nav-badge{margin-left:auto;background:linear-gradient(135deg,#e64c5c,#c43248);color:#fff;border-radius:8px;padding:1px 6px;font-size:10px;font-weight:700}
+#main-content{flex:1;overflow-y:auto;padding:24px;background:radial-gradient(ellipse at top right,rgba(67,110,224,.04),transparent 30%),var(--bg)}
+.module-header{margin-bottom:24px}
+.module-header h2{font-size:21px;font-weight:700;color:var(--text);letter-spacing:-.02em}
+.module-header p{font-size:13px;color:var(--text2);margin-top:5px}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(182px,1fr));gap:14px;margin-bottom:24px}
+.stat-card{padding:18px;border-top:2px solid transparent}
+.stat-card .stat-label{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.7px;margin-bottom:8px;font-weight:700}
+.stat-card .stat-value{font-size:30px;font-weight:700;letter-spacing:-.02em}
+.stat-card .stat-sub{font-size:11px;color:var(--text2);margin-top:5px}
+.stat-card.accent{border-top:2px solid var(--accent)}
+.stat-card.accent .stat-value{color:var(--accent2)}
+.stat-card.success{border-top:2px solid var(--success)}
+.stat-card.success .stat-value{color:var(--success)}
+.stat-card.warning{border-top:2px solid var(--warning)}
+.stat-card.warning .stat-value{color:var(--warning)}
+.stat-card.danger{border-top:2px solid var(--danger)}
+.stat-card.danger .stat-value{color:var(--danger)}
+.card{padding:20px;margin-bottom:20px}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.card-header h3{font-size:14px;font-weight:600;color:var(--text);letter-spacing:-.01em}
+.card-actions{display:flex;gap:8px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{background:rgba(67,110,224,.05);padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;white-space:nowrap;border-bottom:1px solid rgba(67,110,224,.16)}
+tbody tr{border-bottom:1px solid rgba(67,110,224,.07);transition:background .15s}
+tbody tr:hover{background:rgba(67,110,224,.05)}
+tbody td{padding:10px 12px;vertical-align:middle}
+.badge{display:inline-block;padding:3px 9px;border-radius:6px;font-size:11px;font-weight:700;border:1px solid transparent;letter-spacing:.02em}
+.badge-success{background:rgba(16,201,138,.12);border-color:rgba(16,201,138,.22);color:var(--success)}
+.badge-warning{background:rgba(240,156,56,.12);border-color:rgba(240,156,56,.22);color:var(--warning)}
+.badge-danger{background:rgba(230,76,92,.12);border-color:rgba(230,76,92,.2);color:var(--danger)}
+.badge-info{background:rgba(34,184,228,.12);border-color:rgba(34,184,228,.2);color:var(--info)}
+.badge-neutral{background:rgba(104,118,143,.12);border-color:rgba(104,118,143,.18);color:#9aaabb}
+.badge-purple{background:rgba(161,114,255,.12);border-color:rgba(161,114,255,.2);color:#b392ff}
+.form-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.form-row .form-group{flex:1;min-width:140px;margin-bottom:0}
+.filter-bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;padding:14px;background:rgba(67,110,224,.04);border:1px solid rgba(67,110,224,.14);border-radius:var(--radius)}
+.filter-bar input,.filter-bar select{padding:7px 10px;background:rgba(5,8,23,.9);border:1px solid rgba(67,110,224,.14);border-radius:6px;color:var(--text);font-size:12px;outline:none}
+.filter-bar input:focus,.filter-bar select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(67,110,224,.12)}
+.filter-bar select option{background:var(--card);color:var(--text)}
+.timeline{list-style:none;padding-left:20px;border-left:2px solid rgba(67,110,224,.28)}
+.timeline li{position:relative;padding:8px 0 8px 20px;font-size:13px}
+.timeline li::before{content:'';position:absolute;left:-7px;top:14px;width:12px;height:12px;border-radius:50%;background:var(--accent);border:2px solid var(--bg);box-shadow:0 0 0 4px rgba(67,110,224,.1)}
+.timeline li .tl-time{font-size:11px;color:var(--text2)}
+.timeline li .tl-label{font-weight:600;color:var(--text)}
+.timeline li .tl-desc{color:var(--text2)}
+.progress-bar{background:rgba(255,255,255,.06);border-radius:999px;height:7px;overflow:hidden}
+.progress-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#436ee0 0%,#6088ec 100%);transition:width .3s}
+.bar-chart{display:flex;flex-direction:column;gap:9px}
+.bar-row{display:flex;align-items:center;gap:10px;font-size:12px}
+.bar-label{width:120px;color:var(--text2);text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-track{flex:1;background:rgba(255,255,255,.05);border-radius:999px;height:12px;overflow:hidden}
+.bar-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#436ee0 0%,#6088ec 100%);min-width:2px}
+.bar-value{width:40px;text-align:right;font-weight:600;font-size:11px;color:var(--text2)}
+.donut-wrap{display:flex;align-items:center;gap:20px}
+.donut{width:100px;height:100px;border-radius:50%;flex-shrink:0;box-shadow:0 0 24px rgba(0,0,0,.3)}
+.donut-legend{font-size:12px}
+.donut-legend li{list-style:none;display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.donut-legend li span{width:10px;height:10px;border-radius:50%;display:inline-block}
+#modal-root .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px;backdrop-filter:blur(2px)}
+.modal-box{min-width:420px;max-width:600px;width:90%;max-height:90vh;overflow-y:auto;padding:28px}
+.modal-box h3{font-size:16px;font-weight:700;margin-bottom:20px;color:var(--text)}
+.modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid rgba(67,110,224,.12)}
+#toast-root{position:fixed;bottom:20px;right:20px;display:flex;flex-direction:column;gap:8px;z-index:2000}
+.toast{padding:12px 16px;font-size:13px;display:flex;align-items:center;gap:10px;animation:slideIn .22s ease;min-width:260px}
+.toast.success{border-left:3px solid var(--success)}
+.toast.error{border-left:3px solid var(--danger)}
+.toast.info{border-left:3px solid var(--info)}
+.toast.warning{border-left:3px solid var(--warning)}
+@keyframes slideIn{from{transform:translateX(110%);opacity:0}to{transform:translateX(0);opacity:1}}
+.empty-state{text-align:center;padding:48px 24px;color:var(--text2)}
+.empty-state .empty-icon{font-size:36px;margin-bottom:14px;opacity:.5}
+.empty-state p{font-size:14px;font-weight:500}
+.alert-item{padding:14px;margin-bottom:10px;display:flex;align-items:flex-start;gap:12px;background:rgba(255,255,255,.015)}
+.alert-item.critical{border-left:3px solid var(--danger)}
+.alert-item.warning{border-left:3px solid var(--warning)}
+.alert-item.info{border-left:3px solid var(--info)}
+.alert-icon{font-size:18px;flex-shrink:0;margin-top:1px}
+.alert-body .alert-title{font-weight:600;font-size:13px;color:var(--text)}
+.alert-body .alert-desc{font-size:12px;color:var(--text2);margin-top:3px}
+.alert-body .alert-meta{font-size:11px;color:var(--text2);margin-top:4px}
+.vehicle-card{padding:14px;margin-bottom:10px}
+.vehicle-card .vc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.vehicle-card .vc-vin{font-size:11px;color:var(--text2);font-family:monospace}
+.vehicle-card .vc-model{font-weight:700;font-size:15px;color:var(--text)}
+.vehicle-card .vc-details{display:flex;gap:16px;font-size:12px;color:var(--text2)}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(67,110,224,.3);border-radius:999px}
+::-webkit-scrollbar-thumb:hover{background:rgba(67,110,224,.5)}
+.tag{display:inline-block;padding:2px 8px;border-radius:5px;font-size:11px;background:rgba(67,110,224,.08);border:1px solid rgba(67,110,224,.16);color:var(--text2);margin:1px}
+.divider{border:none;border-top:1px solid rgba(67,110,224,.12);margin:16px 0}
+/* ---- Data Import Module ---- */
+.drop-zone{border:2px dashed rgba(67,110,224,.35);border-radius:12px;padding:44px 24px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;background:rgba(67,110,224,.03)}
+.drop-zone:hover,.drop-zone.drag-over{border-color:var(--accent);background:rgba(67,110,224,.08)}
+.drop-zone .dz-icon{font-size:40px;margin-bottom:12px}
+.drop-zone .dz-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px}
+.drop-zone .dz-sub{font-size:12px;color:var(--text2)}
+.fmt-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:16px}
+.fmt-card{background:rgba(67,110,224,.04);border:1px solid rgba(67,110,224,.14);border-radius:10px;padding:14px;text-align:center}
+.fmt-card .fmt-icon{font-size:22px;margin-bottom:6px}
+.fmt-card .fmt-name{font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px}
+.fmt-card .fmt-desc{font-size:11px;color:var(--text2)}
+.val-row{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;font-size:13px;margin-bottom:6px}
+.val-row.pass{background:rgba(16,201,138,.07);border:1px solid rgba(16,201,138,.16)}
+.val-row.fail{background:rgba(230,76,92,.07);border:1px solid rgba(230,76,92,.16)}
+.val-row.warn{background:rgba(240,156,56,.07);border:1px solid rgba(240,156,56,.16)}
+.val-icon{font-size:16px;flex-shrink:0}
+.val-label{font-weight:600;flex:1}
+.val-detail{font-size:11px;color:var(--text2)}
+.preview-wrap{overflow-x:auto;max-height:320px;overflow-y:auto}
+.stat-mini{background:rgba(67,110,224,.06);border:1px solid rgba(67,110,224,.16);border-radius:10px;padding:16px;text-align:center}
+.stat-mini .sm-val{font-size:26px;font-weight:700;color:var(--accent2);letter-spacing:-.02em}
+.stat-mini .sm-lbl{font-size:11px;color:var(--text2);margin-top:4px;text-transform:uppercase;letter-spacing:.5px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+.di-error-box{background:rgba(230,76,92,.08);border:1px solid rgba(230,76,92,.2);border-radius:10px;padding:16px;margin-bottom:16px}
+.di-error-box ul{padding-left:20px;font-size:13px;color:var(--text);margin-top:8px}
+.di-error-box li{margin-bottom:4px}
+</style>
+</head>
+<body>
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">
+      <span class="icon" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#6088ec" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17H3a2 2 0 01-2-2v-4a2 2 0 012-2h13l4 4v2a2 2 0 01-2 2h-1"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="17.5" cy="17.5" r="1.5"/><path d="M14 13V8H5L3 13"/></svg></span>
+      <h1>Automotive Inventory Visibility<br>and Tracking System</h1>
+      <p>AIVTS &mdash; Enterprise Edition</p>
+    </div>
+    <div class="form-group">
+      <label>Select User Account</label>
+      <select id="login-user">
+        <option value="admin">Administrator (Full Access)</option>
+        <option value="manager">Operations Manager</option>
+        <option value="warehouse">Warehouse Executive</option>
+        <option value="analyst">Data Analyst</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="login-password" value="password" placeholder="Enter password">
+      <div style="font-size:11px;color:var(--text2);margin-top:4px">Demo password: <strong>password</strong></div>
+    </div>
+    <button class="btn btn-primary btn-full" onclick="doLogin()">Sign In</button>
+    <p style="text-align:center;font-size:11px;color:var(--text2);margin-top:16px">All data is stored locally in your browser.<br>No internet connection required.</p>
+  </div>
+</div>
+
+<div id="app">
+  <div id="app-header">
+    <div class="header-left">
+      <span class="brand-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6088ec" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17H3a2 2 0 01-2-2v-4a2 2 0 012-2h13l4 4v2a2 2 0 01-2 2h-1"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="17.5" cy="17.5" r="1.5"/><path d="M14 13V8H5L3 13"/></svg></span>
+      <div>
+        <div class="app-title">Automotive Inventory Visibility and Tracking System</div>
+        <div class="app-subtitle">Enterprise Inventory Platform — All data stored locally</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div id="current-time" style="font-size:12px;color:var(--text2)"></div>
+      <div class="user-badge">
+        <span>👤</span>
+        <span id="header-user">User</span>
+        <span id="header-role" class="role-chip">Role</span>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+  <div id="app-body">
+    <div id="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Main</div>
+        <div class="nav-item active" data-module="dashboard" onclick="setModule('dashboard')">
+          <span class="nav-icon">📊</span>Inventory Dashboard
+        </div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Tracking</div>
+        <div class="nav-item" data-module="vehicle" onclick="setModule('vehicle')">
+          <span class="nav-icon">🚙</span>Vehicle Tracking
+        </div>
+        <div class="nav-item" data-module="parts" onclick="setModule('parts')">
+          <span class="nav-icon">🔧</span>Spare Parts Inventory
+        </div>
+        <div class="nav-item" data-module="transit" onclick="setModule('transit')">
+          <span class="nav-icon">🚚</span>Transit Tracking
+        </div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Operations</div>
+        <div class="nav-item" data-module="audit" onclick="setModule('audit')">
+          <span class="nav-icon">📋</span>Stock Audit
+        </div>
+        <div class="nav-item" data-module="reorder" onclick="setModule('reorder')">
+          <span class="nav-icon">🔄</span>Reorder Management
+        </div>
+        <div class="nav-item" data-module="aging" onclick="setModule('aging')">
+          <span class="nav-icon">⏳</span>Aging Inventory
+        </div>
+        <div class="nav-item" data-module="damage" onclick="setModule('damage')">
+          <span class="nav-icon">⚠️</span>Damage Management
+        </div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Business</div>
+        <div class="nav-item" data-module="supplier" onclick="setModule('supplier')">
+          <span class="nav-icon">🏭</span>Supplier Management
+        </div>
+        <div class="nav-item" data-module="allocation" onclick="setModule('allocation')">
+          <span class="nav-icon">📦</span>Allocation Management
+        </div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Intelligence</div>
+        <div class="nav-item" data-module="alerts" onclick="setModule('alerts')">
+          <span class="nav-icon">🔔</span>Alerts &amp; Escalations
+          <span class="nav-badge" id="alert-badge">0</span>
+        </div>
+        <div class="nav-item" data-module="reports" onclick="setModule('reports')">
+          <span class="nav-icon">📈</span>Reports &amp; Analytics
+        </div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Data</div>
+        <div class="nav-item" data-module="dataimport" onclick="setModule('dataimport')">
+          <span class="nav-icon">📥</span>Data Import &amp; Analysis
+        </div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Admin</div>
+        <div class="nav-item" data-module="userroles" onclick="setModule('userroles')">
+          <span class="nav-icon">🔐</span>User Roles &amp; Audit Logs
+        </div>
+      </div>
+    </div>
+    <div id="main-content"></div>
+  </div>
+</div>
+<div id="modal-root"></div>
+<div id="toast-root"></div>
+
+<script>
+// ============================================================
+// DATA STORE (localStorage)
+// ============================================================
+const DB_KEY = 'aivts_db';
+function loadDB(){
+  try{ return JSON.parse(localStorage.getItem(DB_KEY)) || {}; }
+  catch(e){ console.warn('[AIVTS] Failed to load database from localStorage:', e); return {}; }
+}
+function saveDB(db){ localStorage.setItem(DB_KEY, JSON.stringify(db)); }
+function getTable(name){ const db=loadDB(); return db[name]||[]; }
+function setTable(name,data){ const db=loadDB(); db[name]=data; saveDB(db); }
+function addRow(name,row){ const t=getTable(name); t.push(row); setTable(name,t); return row; }
+function updateRow(name,id,fields){ const t=getTable(name); const i=t.findIndex(r=>r.id===id); if(i>=0){Object.assign(t[i],fields); setTable(name,t);} }
+function deleteRow(name,id){ setTable(name,getTable(name).filter(r=>r.id!==id)); }
+function nextId(name){ const t=getTable(name); return t.length?Math.max(...t.map(r=>r.id||0))+1:1; }
+
+// ============================================================
+// AUTH & APP STATE
+// ============================================================
+const USERS = {
+  admin:{name:'Rajesh Kumar',role:'Administrator',email:'admin@aivts.local'},
+  manager:{name:'Priya Sharma',role:'Operations Manager',email:'manager@aivts.local'},
+  warehouse:{name:'Suresh Patel',role:'Warehouse Executive',email:'warehouse@aivts.local'},
+  analyst:{name:'Anita Menon',role:'Data Analyst',email:'analyst@aivts.local'}
+};
+let currentUser = null;
+let currentModule = 'dashboard';
+
+function doLogin(){
+  const u=document.getElementById('login-user').value;
+  const p=document.getElementById('login-password').value;
+  if(p!=='password'){showToast('Invalid password. Use: password','error');return;}
+  currentUser=USERS[u];
+  document.getElementById('header-user').textContent=currentUser.name;
+  document.getElementById('header-role').textContent=currentUser.role;
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').classList.add('active');
+  startClock();
+  updateAlertBadge();
+  addAuditLog('LOGIN','Logged in successfully');
+  setModule('dashboard');
+  showDashboardTour();
+}
+function doLogout(){
+  addAuditLog('LOGOUT','Logged out');
+  currentUser=null;
+  document.getElementById('app').classList.remove('active');
+  document.getElementById('login-screen').style.display='flex';
+}
+function startClock(){
+  function tick(){
+    const now=new Date();
+    document.getElementById('current-time').textContent=now.toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  }
+  tick(); setInterval(tick,1000);
+}
+function setModule(id){
+  currentModule=id;
+  document.querySelectorAll('.nav-item').forEach(el=>{
+    el.classList.toggle('active',el.dataset.module===id);
+  });
+  const mc=document.getElementById('main-content');
+  mc.innerHTML='<div class="empty-state"><div class="empty-icon">⏳</div><p>Loading module...</p></div>';
+  setTimeout(()=>{ MODULES[id] && MODULES[id](); },50);
+}
+function updateAlertBadge(){
+  const alerts=getTable('alerts').filter(a=>!a.resolved);
+  const badge=document.getElementById('alert-badge');
+  if(badge){badge.textContent=alerts.length; badge.style.display=alerts.length?'':'none';}
+}
+function showDashboardTour(){
+// Skip if either old (legacy) or new tour flag is already set
+  if(localStorage.getItem('aivts_tour_v2'))return;
+
+  const steps=[
+    {
+      sel:'.stats-grid',
+      title:'Inventory KPIs',
+      body:'Real-time key performance indicators surface total vehicles, stock health, active shipments, and open alerts across all locations.',
+      pos:'below'
+    },
+    {
+      sel:'#sidebar',
+      title:'Module Navigation',
+      body:'Use the left panel to access every module — Vehicle Tracking, Parts Inventory, Transit, Audits, Suppliers, Allocations, Alerts, and Reports.',
+      pos:'right'
+    },
+    {
+      sel:'#app-header',
+      title:'System Controls',
+      body:'Your profile, assigned role, and live system clock are always visible. Every user action is automatically recorded in the audit log.',
+      pos:'below'
+    },
+    {
+      sel:'.module-header',
+      title:'Getting Started',
+      body:'The system starts empty — ready for your data. Use the + Add buttons in each module to enter vehicles, parts, suppliers, and more.',
+      pos:'below'
+    }
+  ];
+
+  let step=0;
+  let spotEl=null,tipEl=null;
+
+  function init(){
+    spotEl=document.createElement('div');
+    spotEl.id='_tour_spot';
+    spotEl.style.cssText='position:fixed;z-index:4001;pointer-events:none;border-radius:10px;box-shadow:0 0 0 9999px rgba(6,9,26,0.84);border:2px solid rgba(67,110,224,0.85);box-sizing:border-box;transition:top .35s cubic-bezier(.4,0,.2,1),left .35s cubic-bezier(.4,0,.2,1),width .35s cubic-bezier(.4,0,.2,1),height .35s cubic-bezier(.4,0,.2,1)';
+
+    tipEl=document.createElement('div');
+    tipEl.id='_tour_tip';
+    tipEl.style.cssText='position:fixed;z-index:4002;width:308px;background:linear-gradient(150deg,#0f1a30 0%,#0a1020 100%);border:1px solid rgba(67,110,224,0.28);border-radius:12px;padding:22px;box-shadow:0 24px 64px rgba(0,0,0,0.85),0 0 0 1px rgba(67,110,224,0.08);transition:top .35s cubic-bezier(.4,0,.2,1),left .35s cubic-bezier(.4,0,.2,1)';
+
+    document.body.appendChild(spotEl);
+    document.body.appendChild(tipEl);
+    show();
+  }
+
+  function show(){
+    const s=steps[step];
+    const el=document.querySelector(s.sel);
+    if(!el){step++;step<steps.length?show():finish();return;}
+
+    const r=el.getBoundingClientRect(),pad=7;
+    spotEl.style.top=(r.top-pad)+'px';
+    spotEl.style.left=(r.left-pad)+'px';
+    spotEl.style.width=(r.width+pad*2)+'px';
+    spotEl.style.height=(r.height+pad*2)+'px';
+
+    const tw=308,th=190;
+    let tx,ty;
+    if(s.pos==='below'){
+      tx=Math.max(16,Math.min(r.left,window.innerWidth-tw-20));
+      ty=r.bottom+pad+14;
+    } else if(s.pos==='above'){
+      tx=Math.max(16,Math.min(r.left,window.innerWidth-tw-20));
+      ty=Math.max(16,r.top-th-14);
+    } else if(s.pos==='right'){
+      tx=r.right+pad+14;
+      ty=Math.max(16,Math.min(r.top+r.height/2-th/2,window.innerHeight-th-16));
+    } else {
+      tx=Math.max(16,r.left-tw-14);
+      ty=Math.max(16,Math.min(r.top+r.height/2-th/2,window.innerHeight-th-16));
+    }
+    tx=Math.max(16,Math.min(tx,window.innerWidth-tw-16));
+    ty=Math.max(16,Math.min(ty,window.innerHeight-th-16));
+    tipEl.style.left=tx+'px';
+    tipEl.style.top=ty+'px';
+
+    const isLast=step===steps.length-1;
+    const dots=steps.map((_,i)=>`<div style="width:${i===step?20:6}px;height:5px;border-radius:999px;background:${i===step?'#436ee0':'rgba(67,110,224,0.18)'};transition:width .25s;flex-shrink:0"></div>`).join('');
+
+    tipEl.innerHTML=`
+      <div style="font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#6088ec;margin-bottom:7px">Step ${step+1} / ${steps.length}</div>
+      <div style="font-size:14px;font-weight:700;color:#dce2f0;margin-bottom:10px;letter-spacing:-.01em">${s.title}</div>
+      <div style="font-size:12px;color:#7a8aab;line-height:1.72;margin-bottom:18px">${s.body}</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+        <div style="display:flex;gap:5px;align-items:center">${dots}</div>
+        <div style="display:flex;gap:8px;flex-shrink:0">
+          <button id="_t_skip" style="background:transparent;border:1px solid rgba(67,110,224,0.22);border-radius:6px;color:#68768f;font-size:11px;cursor:pointer;padding:5px 11px;font-family:inherit">Skip tour</button>
+          <button id="_t_next" style="background:linear-gradient(135deg,#436ee0,#2b51c8);border:none;border-radius:6px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;padding:6px 15px;font-family:inherit">${isLast?'Finish ✓':'Next →'}</button>
+        </div>
+      </div>`;
+
+    tipEl.querySelector('#_t_skip').onclick=finish;
+    tipEl.querySelector('#_t_next').onclick=isLast?finish:function(){step++;show();};
+  }
+
+  function finish(){
+    if(spotEl)spotEl.remove();
+    if(tipEl)tipEl.remove();
+    localStorage.setItem('aivts_tour_v2','1');
+  }
+
+  setTimeout(init,750);
+}
+
+// ============================================================
+// UTILITY FUNCTIONS
+// ============================================================
+function showToast(msg,type='info',dur=3000){
+  const icons={info:'ℹ️',success:'✅',error:'❌',warning:'⚠️'};
+  const t=document.createElement('div');
+  t.className=`toast ${type}`;
+  t.innerHTML=`<span>${icons[type]}</span><span>${msg}</span>`;
+  document.getElementById('toast-root').appendChild(t);
+  setTimeout(()=>t.remove(),dur);
+}
+function showModal(html,onClose){
+  const root=document.getElementById('modal-root');
+  root.innerHTML=`<div class="modal-backdrop" id="modal-bd">${html}</div>`;
+  document.getElementById('modal-bd').addEventListener('click',e=>{if(e.target.id==='modal-bd'){closeModal();if(onClose)onClose();}});
+}
+function closeModal(){document.getElementById('modal-root').innerHTML='';}
+function fmtDate(d){
+  if(!d)return'—';
+  try{return new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});}
+  catch(e){return d;}
+}
+function fmtDateTime(d){
+  if(!d)return'—';
+  try{return new Date(d).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});}
+  catch(e){return d;}
+}
+function daysSince(d){
+  if(!d)return 0;
+  return Math.floor((Date.now()-new Date(d).getTime())/86400000);
+}
+function ageBadge(days){
+  if(days>180)return'<span class="badge badge-danger">'+days+' days</span>';
+  if(days>90)return'<span class="badge badge-warning">'+days+' days</span>';
+  return'<span class="badge badge-success">'+days+' days</span>';
+}
+function statusBadge(s){
+  const map={
+    'Available':'success','In Transit':'info','Sold':'neutral','Reserved':'warning',
+    'Damaged':'danger','PDI Pending':'warning','PDI Completed':'success','Allocated':'info',
+    'Invoiced':'purple','Delivered':'success','In Stock':'success','Low Stock':'warning',
+    'Out of Stock':'danger','Active':'success','Inactive':'neutral','Resolved':'success',
+    'Pending':'warning','Critical':'danger','Open':'danger','Closed':'neutral',
+    'On Time':'success','Delayed':'danger','In Transit':'info','Delivered':'success',
+    'Received':'success','Partial':'warning','Overdue':'danger','Approved':'success',
+    'Rejected':'danger','Under Review':'warning','Completed':'success','Raised':'warning',
+    'Under Repair':'info','Scrapped':'neutral','Claimed':'info','Good':'success',
+    'Poor':'danger','Average':'warning','Fulfilled':'success','Cancelled':'neutral',
+    'Processing':'info'
+  };
+  const cls=map[s]||'neutral';
+  return`<span class="badge badge-${cls}">${s}</span>`;
+}
+function addAuditLog(action,detail,extra){
+  if(!currentUser)return;
+  addRow('auditlogs',{
+    id:Date.now(),user:currentUser.name,role:currentUser.role,
+    action,detail,extra:extra||'',
+    timestamp:new Date().toISOString()
+  });
+}
+let _pendingConfirmCb = null;
+function confirm2(msg,cb){
+  _pendingConfirmCb = cb;
+  showModal(`<div class="modal-box">
+    <h3>⚠️ Confirm Action</h3>
+    <p style="color:var(--text2);margin-bottom:20px">${msg}</p>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-danger" id="confirm2-ok-btn">Confirm</button>
+    </div>
+  </div>`);
+  const btn = document.getElementById('confirm2-ok-btn');
+  if(btn) btn.addEventListener('click', function(){
+    closeModal();
+    if(_pendingConfirmCb){ _pendingConfirmCb(); _pendingConfirmCb = null; }
+  });
+}
+function makeTable(headers,rows,emptyMsg){
+  if(!rows||!rows.length) return `<div class="empty-state"><div class="empty-icon">📭</div><p>${emptyMsg||'No records found'}</p></div>`;
+  return`<div class="table-wrap"><table>
+    <thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead>
+    <tbody>${rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody>
+  </table></div>`;
+}
+</script>
+
+<script>
+// ============================================================
+// MODULE: INVENTORY DASHBOARD
+// ============================================================
+function renderDashboard(){
+  const vehicles = getTable('vehicles');
+  const parts = getTable('parts');
+  const alerts = getTable('alerts').filter(a=>!a.resolved);
+  const shipments = getTable('shipments');
+  const damages = getTable('damages');
+
+  const vByStatus = {};
+  vehicles.forEach(v=>{ vByStatus[v.status]=(vByStatus[v.status]||0)+1; });
+  const lowParts = parts.filter(p=>p.qty<p.minQty).length;
+  const inTransit = shipments.filter(s=>s.status==='In Transit'||s.status==='Delayed').length;
+  const locations = [...new Set(vehicles.map(v=>v.location))];
+  const locData = locations.map(l=>({loc:l,count:vehicles.filter(v=>v.location===l).length})).sort((a,b)=>b.count-a.count);
+  const maxLoc = locData.length?Math.max(...locData.map(d=>d.count)):1;
+
+  const html = `
+  <div class="module-header">
+    <h2>📊 Inventory Dashboard</h2>
+    <p>Real-time stock visibility across all locations and categories</p>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card accent"><div class="stat-label">Total Vehicles</div><div class="stat-value">${vehicles.length}</div><div class="stat-sub">Across all locations</div></div>
+    <div class="stat-card success"><div class="stat-label">Available</div><div class="stat-value">${vByStatus['Available']||0}</div><div class="stat-sub">Ready for allocation</div></div>
+    <div class="stat-card info"><div class="stat-label">In Transit</div><div class="stat-value">${(vByStatus['In Transit']||0)}</div><div class="stat-sub">Moving to destinations</div></div>
+    <div class="stat-card warning"><div class="stat-label">PDI Pending</div><div class="stat-value">${vByStatus['PDI Pending']||0}</div><div class="stat-sub">Pre-delivery inspection</div></div>
+    <div class="stat-card danger"><div class="stat-label">Damaged</div><div class="stat-value">${vByStatus['Damaged']||0}</div><div class="stat-sub">Require attention</div></div>
+    <div class="stat-card warning"><div class="stat-label">Low Stock Parts</div><div class="stat-value">${lowParts}</div><div class="stat-sub">Below minimum level</div></div>
+    <div class="stat-card info"><div class="stat-label">Active Shipments</div><div class="stat-value">${inTransit}</div><div class="stat-sub">En route now</div></div>
+    <div class="stat-card danger"><div class="stat-label">Open Alerts</div><div class="stat-value">${alerts.length}</div><div class="stat-sub">Require action</div></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header"><h3>🚗 Vehicle Status Breakdown</h3></div>
+      <div class="bar-chart">
+        ${Object.entries(vByStatus).map(([s,c])=>`
+          <div class="bar-row">
+            <div class="bar-label">${s}</div>
+            <div class="bar-track"><div class="bar-fill" style="width:${vehicles.length>0?Math.round(c/vehicles.length*100):0}%;background:${s==='Available'?'var(--success)':s==='Damaged'?'var(--danger)':s==='In Transit'?'var(--accent)':'var(--warning)'}"></div></div>
+            <div class="bar-value">${c}</div>
+          </div>`).join('')}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><h3>📍 Stock by Location</h3></div>
+      <div class="bar-chart">
+        ${locData.map(d=>`
+          <div class="bar-row">
+            <div class="bar-label">${d.loc}</div>
+            <div class="bar-track"><div class="bar-fill" style="width:${Math.round(d.count/maxLoc*100)}%"></div></div>
+            <div class="bar-value">${d.count}</div>
+          </div>`).join('')}
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header"><h3>⚠️ Recent Alerts</h3><a href="#" onclick="setModule('alerts')" style="font-size:12px;color:var(--accent)">View All</a></div>
+      ${alerts.slice(0,5).map(a=>`
+        <div class="alert-item ${a.type}">
+          <div class="alert-icon">${a.type==='critical'?'🚨':a.type==='warning'?'⚠️':'ℹ️'}</div>
+          <div class="alert-body">
+            <div class="alert-title">${a.title}</div>
+            <div class="alert-desc">${a.description}</div>
+          </div>
+        </div>`).join('')}
+    </div>
+    <div class="card">
+      <div class="card-header"><h3>🔧 Spare Parts Overview</h3><a href="#" onclick="setModule('parts')" style="font-size:12px;color:var(--accent)">Manage</a></div>
+      <div class="stats-grid" style="grid-template-columns:1fr 1fr;gap:12px;margin-bottom:0">
+        <div class="stat-card success"><div class="stat-label">Total SKUs</div><div class="stat-value" style="font-size:22px">${parts.length}</div></div>
+        <div class="stat-card warning"><div class="stat-label">Low Stock</div><div class="stat-value" style="font-size:22px">${lowParts}</div></div>
+        <div class="stat-card danger"><div class="stat-label">Out of Stock</div><div class="stat-value" style="font-size:22px">${parts.filter(p=>p.qty===0).length}</div></div>
+        <div class="stat-card accent"><div class="stat-label">Total Value</div><div class="stat-value" style="font-size:16px">₹${(parts.reduce((s,p)=>s+p.qty*p.price,0)/100000).toFixed(1)}L</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><h3>🚗 Recent Vehicle Activity</h3><button class="btn btn-primary btn-sm" onclick="setModule('vehicle')">View All Vehicles</button></div>
+    ${makeTable(
+      ['VIN','Model','Variant','Color','Location','Status','Received'],
+      vehicles.slice(0,8).map(v=>[
+        `<code style="font-size:11px">${v.vin}</code>`,v.model,v.variant,v.color,v.location,statusBadge(v.status),fmtDate(v.receivedDate)
+      ])
+    )}
+  </div>`;
+
+  document.getElementById('main-content').innerHTML = html;
+}
+
+// ============================================================
+// MODULE: VEHICLE TRACKING
+// ============================================================
+function renderVehicle(){
+  const vehicles = getTable('vehicles');
+  let filterStatus = '', filterLoc = '', filterSearch = '';
+  const locations = [...new Set(vehicles.map(v=>v.location))];
+  const statuses = [...new Set(vehicles.map(v=>v.status))];
+
+  function render(){
+    let data = vehicles;
+    if(filterStatus) data=data.filter(v=>v.status===filterStatus);
+    if(filterLoc) data=data.filter(v=>v.location===filterLoc);
+    if(filterSearch){ const q=filterSearch.toLowerCase(); data=data.filter(v=>v.vin.toLowerCase().includes(q)||v.model.toLowerCase().includes(q)||v.color.toLowerCase().includes(q)); }
+
+    document.getElementById('vt-table').innerHTML = makeTable(
+      ['VIN','Model','Variant','Color','Location','Status','Received','Age','Actions'],
+      data.map(v=>[
+        `<code style="font-size:11px">${v.vin}</code>`,v.model,v.variant,v.color,v.location,
+        statusBadge(v.status),fmtDate(v.receivedDate),ageBadge(daysSince(v.receivedDate)),
+        `<div style="display:flex;gap:4px">
+          <button class="btn btn-secondary btn-sm" onclick="viewVehicleTimeline('${v.vin}')">Timeline</button>
+          <button class="btn btn-primary btn-sm" onclick="editVehicleStatus(${v.id})">Update</button>
+        </div>`
+      ]),
+      'No vehicles found'
+    );
+  }
+
+  const html = `
+  <div class="module-header">
+    <h2>🚙 Vehicle Tracking</h2>
+    <p>VIN-level vehicle movement and lifecycle tracking</p>
+  </div>
+  <div class="filter-bar">
+    <input id="vt-search" placeholder="🔍 Search VIN, model, color..." style="flex:2;min-width:200px" oninput="filterSearch=this.value;render()">
+    <select id="vt-status" onchange="filterStatus=this.value;render()">
+      <option value="">All Statuses</option>
+      ${statuses.map(s=>`<option>${s}</option>`).join('')}
+    </select>
+    <select id="vt-loc" onchange="filterLoc=this.value;render()">
+      <option value="">All Locations</option>
+      ${locations.map(l=>`<option>${l}</option>`).join('')}
+    </select>
+    <button class="btn btn-primary btn-sm" onclick="addVehicleModal()">+ Add Vehicle</button>
+    <button class="btn btn-secondary btn-sm" onclick="filterStatus='';filterLoc='';filterSearch='';document.getElementById('vt-search').value='';document.getElementById('vt-status').value='';document.getElementById('vt-loc').value='';render()">Reset</button>
+  </div>
+  <div class="card">
+    <div id="vt-table"></div>
+  </div>`;
+
+  document.getElementById('main-content').innerHTML = html;
+  // make render accessible
+  window._vtRender = render;
+  render();
+}
+
+function viewVehicleTimeline(vin){
+  const vehicles = getTable('vehicles');
+  const v = vehicles.find(x=>x.vin===vin);
+  const events = getTable('vtimelines').filter(e=>e.vin===vin);
+  if(!v){showToast('Vehicle not found','error');return;}
+  showModal(`<div class="modal-box">
+    <h3>🚗 Vehicle Timeline — ${vin}</h3>
+    <div style="margin-bottom:16px">
+      <div style="font-size:14px;font-weight:600">${v.model} ${v.variant}</div>
+      <div style="font-size:12px;color:var(--text2)">${v.color} | ${v.location} | ${statusBadge(v.status)}</div>
+    </div>
+    ${events.length?`<ul class="timeline">
+      ${events.map(e=>`<li>
+        <div class="tl-time">${fmtDateTime(e.timestamp)}</div>
+        <div class="tl-label">${e.event}</div>
+        <div class="tl-desc">📍 ${e.location} — By: ${e.by}</div>
+        ${e.notes?`<div class="tl-desc" style="color:var(--warning)">${e.notes}</div>`:''}
+      </li>`).join('')}
+    </ul>`:'<div class="empty-state"><div class="empty-icon">📭</div><p>No timeline events recorded</p></div>'}
+    <div class="modal-footer">
+      <button class="btn btn-primary btn-sm" onclick="addTimelineEvent('${vin}')">+ Add Event</button>
+      <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+    </div>
+  </div>`);
+}
+
+function addTimelineEvent(vin){
+  closeModal();
+  showModal(`<div class="modal-box">
+    <h3>➕ Add Timeline Event — ${vin}</h3>
+    <div class="form-group"><label>Event</label>
+      <select id="te-event"><option>Manufactured</option><option>Quality Checked</option><option>Dispatched</option><option>Received at Yard</option><option>PDI Started</option><option>PDI Completed</option><option>Allocated</option><option>Invoiced</option><option>Delivered</option><option>Damage Reported</option><option>Repaired</option><option>Other</option></select>
+    </div>
+    <div class="form-group"><label>Location</label><input id="te-loc" placeholder="e.g. Bangalore Yard"></div>
+    <div class="form-group"><label>Notes</label><input id="te-notes" placeholder="Optional notes"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveTimelineEvent('${vin}')">Save</button>
+    </div>
+  </div>`);
+}
+
+function saveTimelineEvent(vin){
+  const event=document.getElementById('te-event').value;
+  const loc=document.getElementById('te-loc').value;
+  const notes=document.getElementById('te-notes').value;
+  addRow('vtimelines',{id:nextId('vtimelines'),vin,event,location:loc,timestamp:new Date().toISOString(),by:currentUser.name,notes});
+  addAuditLog('ADD_TIMELINE',`Added ${event} event for VIN ${vin}`);
+  showToast('Timeline event added','success');
+  closeModal();
+}
+
+function editVehicleStatus(id){
+  const v=getTable('vehicles').find(x=>x.id===id);
+  if(!v)return;
+  showModal(`<div class="modal-box">
+    <h3>✏️ Update Vehicle — ${v.vin}</h3>
+    <div class="form-group"><label>Model</label><input id="ev-model" value="${v.model}"></div>
+    <div class="form-group"><label>Status</label>
+      <select id="ev-status">
+        ${['Available','In Transit','PDI Pending','PDI Completed','Allocated','Reserved','Invoiced','Delivered','Damaged','Sold'].map(s=>`<option ${s===v.status?'selected':''}>${s}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group"><label>Location</label><input id="ev-loc" value="${v.location}"></div>
+    <div class="form-group"><label>Dealer</label><input id="ev-dealer" value="${v.dealer}"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveVehicleStatus(${id})">Save Changes</button>
+    </div>
+  </div>`);
+}
+
+function saveVehicleStatus(id){
+  const v=getTable('vehicles').find(x=>x.id===id);
+  const oldStatus=v.status;
+  const ns=document.getElementById('ev-status').value;
+  updateRow('vehicles',id,{model:document.getElementById('ev-model').value,status:ns,location:document.getElementById('ev-loc').value,dealer:document.getElementById('ev-dealer').value});
+  addAuditLog('UPDATE_VEHICLE',`Status changed: ${oldStatus} → ${ns}`,`VIN: ${v.vin}`);
+  showToast('Vehicle updated successfully','success');
+  closeModal();
+  renderVehicle();
+}
+
+function addVehicleModal(){
+  showModal(`<div class="modal-box">
+    <h3>➕ Add New Vehicle</h3>
+    <div class="form-row">
+      <div class="form-group"><label>VIN *</label><input id="nv-vin" placeholder="e.g. MH01SWIFT9999"></div>
+      <div class="form-group"><label>Model *</label><input id="nv-model" placeholder="e.g. Swift LXI"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Variant</label><input id="nv-variant" placeholder="e.g. Petrol MT"></div>
+      <div class="form-group"><label>Color</label><input id="nv-color" placeholder="e.g. Pearl White"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Location</label><input id="nv-location" placeholder="e.g. Chennai Warehouse"></div>
+      <div class="form-group"><label>Status</label>
+        <select id="nv-status"><option>Available</option><option>In Transit</option><option>PDI Pending</option></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Price (₹)</label><input id="nv-price" type="number" placeholder="e.g. 750000"></div>
+      <div class="form-group"><label>Dealer/Destination</label><input id="nv-dealer" placeholder="e.g. Delhi Showroom"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveNewVehicle()">Add Vehicle</button>
+    </div>
+  </div>`);
+}
+
+function saveNewVehicle(){
+  const vin=document.getElementById('nv-vin').value.trim();
+  const model=document.getElementById('nv-model').value.trim();
+  if(!vin||!model){showToast('VIN and Model are required','error');return;}
+  const existing=getTable('vehicles').find(v=>v.vin===vin);
+  if(existing){showToast('VIN already exists','error');return;}
+  addRow('vehicles',{
+    id:nextId('vehicles'),vin,model,
+    variant:document.getElementById('nv-variant').value,
+    color:document.getElementById('nv-color').value,
+    location:document.getElementById('nv-location').value,
+    status:document.getElementById('nv-status').value,
+    price:parseFloat(document.getElementById('nv-price').value)||0,
+    dealer:document.getElementById('nv-dealer').value,
+    receivedDate:new Date().toISOString()
+  });
+  addAuditLog('ADD_VEHICLE',`New vehicle added: ${vin} — ${model}`);
+  showToast('Vehicle added successfully','success');
+  closeModal();
+  renderVehicle();
+}
+</script>
+
+<script>
+// ============================================================
+// MODULE: SPARE PARTS INVENTORY
+// ============================================================
+function renderParts(){
+  const parts = getTable('parts');
+  let search='', cat='', loc='';
+  const cats=[...new Set(parts.map(p=>p.category))];
+  const locs=[...new Set(parts.map(p=>p.location))];
+
+  function render(){
+    let data=parts;
+    if(search){const q=search.toLowerCase();data=data.filter(p=>p.sku.toLowerCase().includes(q)||p.name.toLowerCase().includes(q));}
+    if(cat)data=data.filter(p=>p.category===cat);
+    if(loc)data=data.filter(p=>p.location===loc);
+    document.getElementById('parts-table').innerHTML=makeTable(
+      ['SKU','Name','Category','Brand','Location','Qty','Min Qty','Status','Unit Price','Actions'],
+      data.map(p=>[
+        `<code style="font-size:11px">${p.sku}</code>`,p.name,
+        `<span class="tag">${p.category}</span>`,p.brand,p.location,
+        `<strong>${p.qty}</strong>`,p.minQty,
+        p.qty===0?statusBadge('Out of Stock'):p.qty<p.minQty?statusBadge('Low Stock'):statusBadge('In Stock'),
+        `₹${p.price.toLocaleString()}`,
+        `<div style="display:flex;gap:4px">
+          <button class="btn btn-primary btn-sm" onclick="editPart(${p.id})">Edit</button>
+          <button class="btn btn-success btn-sm" onclick="adjustStock(${p.id})">Adjust</button>
+          <button class="btn btn-danger btn-sm" onclick="deletePart(${p.id})">Delete</button>
+        </div>`
+      ]),'No parts found');
+  }
+
+  const html=`
+  <div class="module-header">
+    <h2>🔧 Spare Parts Inventory</h2>
+    <p>SKU-level spare parts tracking and stock management</p>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-card accent"><div class="stat-label">Total SKUs</div><div class="stat-value">${parts.length}</div></div>
+    <div class="stat-card warning"><div class="stat-label">Low Stock</div><div class="stat-value">${parts.filter(p=>p.qty>0&&p.qty<p.minQty).length}</div></div>
+    <div class="stat-card danger"><div class="stat-label">Out of Stock</div><div class="stat-value">${parts.filter(p=>p.qty===0).length}</div></div>
+    <div class="stat-card success"><div class="stat-label">Total Inventory Value</div><div class="stat-value" style="font-size:18px">₹${(parts.reduce((s,p)=>s+p.qty*p.price,0)/100000).toFixed(1)}L</div></div>
+  </div>
+  <div class="filter-bar">
+    <input id="parts-search" placeholder="🔍 Search SKU or name..." style="flex:2" oninput="search=this.value;render()">
+    <select onchange="cat=this.value;render()"><option value="">All Categories</option>${cats.map(c=>`<option>${c}</option>`).join('')}</select>
+    <select onchange="loc=this.value;render()"><option value="">All Locations</option>${locs.map(l=>`<option>${l}</option>`).join('')}</select>
+    <button class="btn btn-primary btn-sm" onclick="addPartModal()">+ Add Part</button>
+  </div>
+  <div class="card"><div id="parts-table"></div></div>`;
+
+  document.getElementById('main-content').innerHTML=html;
+  render();
+}
+
+function addPartModal(){
+  showModal(`<div class="modal-box">
+    <h3>➕ Add New Spare Part</h3>
+    <div class="form-row">
+      <div class="form-group"><label>SKU *</label><input id="np-sku" placeholder="e.g. SKU-BRK-021"></div>
+      <div class="form-group"><label>Name *</label><input id="np-name" placeholder="Part name"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Category</label><input id="np-cat" placeholder="e.g. Engine"></div>
+      <div class="form-group"><label>Brand</label><input id="np-brand" placeholder="e.g. Maruti Genuine"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Location</label><input id="np-loc" placeholder="e.g. Chennai Warehouse"></div>
+      <div class="form-group"><label>Unit</label><input id="np-unit" value="Pcs"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Initial Qty</label><input id="np-qty" type="number" value="0"></div>
+      <div class="form-group"><label>Min Qty</label><input id="np-min" type="number" value="10"></div>
+      <div class="form-group"><label>Unit Price (₹)</label><input id="np-price" type="number" value="0"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveNewPart()">Add Part</button>
+    </div>
+  </div>`);
+}
+
+function saveNewPart(){
+  const sku=document.getElementById('np-sku').value.trim();
+  const name=document.getElementById('np-name').value.trim();
+  if(!sku||!name){showToast('SKU and Name are required','error');return;}
+  if(getTable('parts').find(p=>p.sku===sku)){showToast('SKU already exists','error');return;}
+  addRow('parts',{
+    id:nextId('parts'),sku,name,
+    category:document.getElementById('np-cat').value,
+    brand:document.getElementById('np-brand').value,
+    location:document.getElementById('np-loc').value,
+    unit:document.getElementById('np-unit').value,
+    qty:parseInt(document.getElementById('np-qty').value)||0,
+    minQty:parseInt(document.getElementById('np-min').value)||10,
+    price:parseFloat(document.getElementById('np-price').value)||0,
+    lastUpdated:new Date().toISOString()
+  });
+  addAuditLog('ADD_PART',`New part added: ${sku} — ${name}`);
+  showToast('Part added','success');
+  closeModal();
+  renderParts();
+}
+
+function editPart(id){
+  const p=getTable('parts').find(x=>x.id===id);
+  if(!p)return;
+  showModal(`<div class="modal-box">
+    <h3>✏️ Edit Part — ${p.sku}</h3>
+    <div class="form-row">
+      <div class="form-group"><label>Name</label><input id="ep-name" value="${p.name}"></div>
+      <div class="form-group"><label>Category</label><input id="ep-cat" value="${p.category}"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Brand</label><input id="ep-brand" value="${p.brand}"></div>
+      <div class="form-group"><label>Location</label><input id="ep-loc" value="${p.location}"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Current Qty</label><input id="ep-qty" type="number" value="${p.qty}"></div>
+      <div class="form-group"><label>Min Qty</label><input id="ep-min" type="number" value="${p.minQty}"></div>
+      <div class="form-group"><label>Unit Price (₹)</label><input id="ep-price" type="number" value="${p.price}"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="savePartEdit(${id})">Save</button>
+    </div>
+  </div>`);
+}
+
+function savePartEdit(id){
+  const p=getTable('parts').find(x=>x.id===id);
+  updateRow('parts',id,{
+    name:document.getElementById('ep-name').value,
+    category:document.getElementById('ep-cat').value,
+    brand:document.getElementById('ep-brand').value,
+    location:document.getElementById('ep-loc').value,
+    qty:parseInt(document.getElementById('ep-qty').value)||0,
+    minQty:parseInt(document.getElementById('ep-min').value)||0,
+    price:parseFloat(document.getElementById('ep-price').value)||0,
+    lastUpdated:new Date().toISOString()
+  });
+  addAuditLog('UPDATE_PART',`Part updated: ${p.sku}`);
+  showToast('Part updated','success');
+  closeModal();
+  renderParts();
+}
+
+function adjustStock(id){
+  const p=getTable('parts').find(x=>x.id===id);
+  if(!p)return;
+  showModal(`<div class="modal-box">
+    <h3>📦 Adjust Stock — ${p.name}</h3>
+    <p style="color:var(--text2);margin-bottom:16px">Current Stock: <strong>${p.qty} ${p.unit}</strong></p>
+    <div class="form-group"><label>Adjustment Type</label>
+      <select id="adj-type"><option value="add">Add Stock (Inward)</option><option value="remove">Remove Stock (Outward)</option></select>
+    </div>
+    <div class="form-group"><label>Quantity</label><input id="adj-qty" type="number" min="1" value="1"></div>
+    <div class="form-group"><label>Reason</label><input id="adj-reason" placeholder="e.g. Received from supplier"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveStockAdjust(${id})">Adjust</button>
+    </div>
+  </div>`);
+}
+
+function saveStockAdjust(id){
+  const p=getTable('parts').find(x=>x.id===id);
+  const type=document.getElementById('adj-type').value;
+  const qty=parseInt(document.getElementById('adj-qty').value)||0;
+  const reason=document.getElementById('adj-reason').value;
+  const oldQty=p.qty;
+  const newQty=type==='add'?oldQty+qty:Math.max(0,oldQty-qty);
+  updateRow('parts',id,{qty:newQty,lastUpdated:new Date().toISOString()});
+  addAuditLog('STOCK_ADJUST',`${p.sku}: ${oldQty} → ${newQty} (${type})`,reason);
+  showToast(`Stock adjusted: ${oldQty} → ${newQty}`,'success');
+  closeModal();
+  renderParts();
+}
+
+function deletePart(id){
+  const p=getTable('parts').find(x=>x.id===id);
+  confirm2(`Delete part "${p.name}" (${p.sku})?`,function(){
+    deleteRow('parts',id);
+    addAuditLog('DELETE_PART',`Part deleted: ${p.sku}`);
+    showToast('Part deleted','success');
+    renderParts();
+  });
+}
+</script>
+
+<script>
+// ============================================================
+// MODULE: TRANSIT TRACKING
+// ============================================================
+function renderTransit(){
+  const shipments=getTable('shipments');
+  let sf='';
+  function render(){
+    let data=shipments;
+    if(sf)data=data.filter(s=>s.status===sf);
+    document.getElementById('transit-table').innerHTML=makeTable(
+      ['Shipment ID','Type','Description','From','To','Transporter','Dispatched','Expected','Current Location','Status','Actions'],
+      data.map(s=>[
+        `<strong>${s.shipmentId}</strong>`,
+        `<span class="tag">${s.type}</span>`,
+        s.description,s.from,s.to,s.transporter,
+        fmtDate(s.dispatchDate),fmtDate(s.expectedDate),
+        s.currentLocation||'—',statusBadge(s.status),
+        `<div style="display:flex;gap:4px">
+          <button class="btn btn-primary btn-sm" onclick="updateShipment(${s.id})">Update</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteShipment(${s.id})">Remove</button>
+        </div>`
+      ]),'No shipments found');
+  }
+
+  const html=`
+  <div class="module-header">
+    <h2>🚚 Transit Tracking</h2>
+    <p>Track vehicle and parts shipments in real-time</p>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-card accent"><div class="stat-label">Total Shipments</div><div class="stat-value">${shipments.length}</div></div>
+    <div class="stat-card info"><div class="stat-label">In Transit</div><div class="stat-value">${shipments.filter(s=>s.status==='In Transit').length}</div></div>
+    <div class="stat-card danger"><div class="stat-label">Delayed</div><div class="stat-value">${shipments.filter(s=>s.status==='Delayed').length}</div></div>
+    <div class="stat-card success"><div class="stat-label">Delivered</div><div class="stat-value">${shipments.filter(s=>s.status==='Delivered').length}</div></div>
+  </div>
+  <div class="filter-bar">
+    <select onchange="sf=this.value;render()">
+      <option value="">All Statuses</option>
+      <option>In Transit</option><option>Delayed</option><option>Delivered</option>
+    </select>
+    <button class="btn btn-primary btn-sm" onclick="addShipmentModal()">+ Add Shipment</button>
+  </div>
+  ${shipments.filter(s=>s.status==='Delayed').length?`<div class="card" style="border-left:4px solid var(--danger)">
+    <div class="card-header"><h3>🚨 Delayed Shipments — Immediate Attention</h3></div>
+    ${shipments.filter(s=>s.status==='Delayed').map(s=>`
+      <div class="alert-item critical">
+        <div class="alert-icon">🚨</div>
+        <div class="alert-body">
+          <div class="alert-title">${s.shipmentId} — ${s.description}</div>
+          <div class="alert-desc">Route: ${s.from} → ${s.to} | Transporter: ${s.transporter}</div>
+          <div class="alert-desc">Current Location: ${s.currentLocation} | Expected: ${fmtDate(s.expectedDate)}</div>
+        </div>
+        <button class="btn btn-warning btn-sm" onclick="updateShipment(${s.id})" style="flex-shrink:0">Update Status</button>
+      </div>`).join('')}
+  </div>`:''}
+  <div class="card">
+    <div class="card-header"><h3>All Shipments</h3></div>
+    <div id="transit-table"></div>
+  </div>`;
+
+  document.getElementById('main-content').innerHTML=html;
+  render();
+}
+
+function addShipmentModal(){
+  showModal(`<div class="modal-box">
+    <h3>➕ New Shipment</h3>
+    <div class="form-row">
+      <div class="form-group"><label>Type</label><select id="sh-type"><option>Vehicle</option><option>Parts</option></select></div>
+      <div class="form-group"><label>Description</label><input id="sh-desc" placeholder="e.g. 3 Units - Swift LXI"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>From</label><input id="sh-from" placeholder="Origin"></div>
+      <div class="form-group"><label>To</label><input id="sh-to" placeholder="Destination"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Transporter</label><input id="sh-trans" placeholder="Transport company"></div>
+      <div class="form-group"><label>Expected Delivery</label><input id="sh-exp" type="date"></div>
+    </div>
+    <div class="form-group"><label>VINs (if vehicle)</label><input id="sh-vins" placeholder="Comma separated VINs"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveShipment()">Create Shipment</button>
+    </div>
+  </div>`);
+}
+
+function saveShipment(){
+  const n=nextId('shipments');
+  const sid='SHIP-'+String(n).padStart(3,'0');
+  addRow('shipments',{
+    id:n,shipmentId:sid,
+    type:document.getElementById('sh-type').value,
+    description:document.getElementById('sh-desc').value,
+    from:document.getElementById('sh-from').value,
+    to:document.getElementById('sh-to').value,
+    transporter:document.getElementById('sh-trans').value,
+    dispatchDate:new Date().toISOString(),
+    expectedDate:document.getElementById('sh-exp').value?new Date(document.getElementById('sh-exp').value).toISOString():'',
+    status:'In Transit',
+    vins:document.getElementById('sh-vins').value,
+    currentLocation:document.getElementById('sh-from').value
+  });
+  addAuditLog('ADD_SHIPMENT',`Shipment ${sid} created`);
+  showToast('Shipment created','success');
+  closeModal();
+  renderTransit();
+}
+
+function updateShipment(id){
+  const s=getTable('shipments').find(x=>x.id===id);
+  if(!s)return;
+  showModal(`<div class="modal-box">
+    <h3>✏️ Update Shipment — ${s.shipmentId}</h3>
+    <div class="form-group"><label>Current Location</label><input id="us-loc" value="${s.currentLocation||''}"></div>
+    <div class="form-group"><label>Status</label>
+      <select id="us-status">
+        <option ${s.status==='In Transit'?'selected':''}>In Transit</option>
+        <option ${s.status==='Delayed'?'selected':''}>Delayed</option>
+        <option ${s.status==='Delivered'?'selected':''}>Delivered</option>
+      </select>
+    </div>
+    <div class="form-group"><label>Notes</label><input id="us-notes" placeholder="Optional update notes"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveShipmentUpdate(${id})">Update</button>
+    </div>
+  </div>`);
+}
+
+function saveShipmentUpdate(id){
+  const s=getTable('shipments').find(x=>x.id===id);
+  const ns=document.getElementById('us-status').value;
+  updateRow('shipments',id,{status:ns,currentLocation:document.getElementById('us-loc').value});
+  addAuditLog('UPDATE_SHIPMENT',`${s.shipmentId}: ${s.status} → ${ns}`,document.getElementById('us-notes').value);
+  showToast('Shipment updated','success');
+  closeModal();
+  renderTransit();
+}
+
+function deleteShipment(id){
+  const s=getTable('shipments').find(x=>x.id===id);
+  confirm2(`Remove shipment "${s.shipmentId}"?`,function(){
+    deleteRow('shipments',id);
+    addAuditLog('DELETE_SHIPMENT',`Shipment ${s.shipmentId} removed`);
+    showToast('Shipment removed','success');
+    renderTransit();
+  });
+}
+
+// ============================================================
+// MODULE: STOCK AUDIT
+// ============================================================
+function renderAudit(){
+  const audits=getTable('audits');
+  const html=`
+  <div class="module-header">
+    <h2>📋 Stock Audit</h2>
+    <p>Physical vs system stock verification and mismatch management</p>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-card accent"><div class="stat-label">Total Audits</div><div class="stat-value">${audits.length}</div></div>
+    <div class="stat-card success"><div class="stat-label">Completed</div><div class="stat-value">${audits.filter(a=>a.status==='Completed').length}</div></div>
+    <div class="stat-card warning"><div class="stat-label">In Progress</div><div class="stat-value">${audits.filter(a=>a.status==='In Progress').length}</div></div>
+    <div class="stat-card danger"><div class="stat-label">Total Mismatches</div><div class="stat-value">${audits.reduce((s,a)=>s+a.mismatches,0)}</div></div>
+  </div>
+  <div class="card">
+    <div class="card-header"><h3>Audit Records</h3><button class="btn btn-primary btn-sm" onclick="newAuditModal()">+ New Audit</button></div>
+    ${makeTable(
+      ['Audit ID','Location','Auditor','Date','Items Audited','Mismatches','Status','Notes','Actions'],
+      audits.map(a=>[
+        `<strong>${a.auditId}</strong>`,a.location,a.auditor,fmtDate(a.auditDate),a.itemsAudited,
+        `<strong style="color:${a.mismatches>0?'var(--danger)':'var(--success)'}">${a.mismatches}</strong>`,
+        statusBadge(a.status),a.notes||'—',
+        `<div style="display:flex;gap:4px">
+          <button class="btn btn-secondary btn-sm" onclick="viewAuditItems('${a.auditId}')">View Items</button>
+          <button class="btn btn-primary btn-sm" onclick="addAuditItem('${a.auditId}')">Add Item</button>
+        </div>`
+      ])
+    )}
+  </div>
+  <div class="card">
+    <div class="card-header"><h3>📊 Mismatch Report — AUD-001</h3></div>
+    ${makeTable(
+      ['SKU','Item Name','System Qty','Physical Qty','Difference','Status','Required Action'],
+      getTable('auditItems').map(i=>[
+        `<code style="font-size:11px">${i.sku}</code>`,i.name,i.systemQty,i.physicalQty,
+        `<strong style="color:${i.difference<0?'var(--danger)':i.difference>0?'var(--warning)':'var(--success)'}">${i.difference>0?'+':''}${i.difference}</strong>`,
+        statusBadge(i.status),i.action
+      ])
+    )}
+  </div>`;
+  document.getElementById('main-content').innerHTML=html;
+}
+
+function newAuditModal(){
+  showModal(`<div class="modal-box">
+    <h3>➕ New Stock Audit</h3>
+    <div class="form-group"><label>Location</label><input id="na-loc" placeholder="e.g. Mumbai Showroom"></div>
+    <div class="form-group"><label>Auditor</label><input id="na-aud" value="${currentUser.name}"></div>
+    <div class="form-group"><label>Notes</label><input id="na-notes" placeholder="Any initial notes"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveNewAudit()">Create Audit</button>
+    </div>
+  </div>`);
+}
+
+function saveNewAudit(){
+  const n=nextId('audits');
+  const aid='AUD-'+String(n).padStart(3,'0');
+  addRow('audits',{
+    id:n,auditId:aid,
+    location:document.getElementById('na-loc').value,
+    auditor:document.getElementById('na-aud').value,
+    auditDate:new Date().toISOString(),status:'In Progress',itemsAudited:0,mismatches:0,
+    notes:document.getElementById('na-notes').value
+  });
+  addAuditLog('NEW_AUDIT',`Audit ${aid} created at ${document.getElementById('na-loc').value}`);
+  showToast('Audit created','success');
+  closeModal();
+  renderAudit();
+}
+
+function viewAuditItems(auditId){
+  const items=getTable('auditItems').filter(i=>i.auditId===auditId);
+  showModal(`<div class="modal-box" style="max-width:700px">
+    <h3>📋 Audit Items — ${auditId}</h3>
+    ${makeTable(['SKU','Name','System Qty','Physical Qty','Difference','Status','Action'],
+      items.map(i=>[
+        `<code style="font-size:11px">${i.sku}</code>`,i.name,i.systemQty,i.physicalQty,
+        `<strong style="color:${i.difference<0?'var(--danger)':i.difference>0?'var(--warning)':'var(--success)'}">${i.difference>0?'+':''}${i.difference}</strong>`,
+        statusBadge(i.status),i.action
+      ]),'No items recorded')}
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal()">Close</button></div>
+  </div>`);
+}
+
+function addAuditItem(auditId){
+  showModal(`<div class="modal-box">
+    <h3>➕ Add Audit Item — ${auditId}</h3>
+    <div class="form-row">
+      <div class="form-group"><label>SKU</label><input id="ai-sku" placeholder="SKU code"></div>
+      <div class="form-group"><label>Item Name</label><input id="ai-name" placeholder="Item description"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>System Qty</label><input id="ai-sys" type="number" value="0"></div>
+      <div class="form-group"><label>Physical Qty</label><input id="ai-phy" type="number" value="0"></div>
+    </div>
+    <div class="form-group"><label>Required Action</label><input id="ai-action" placeholder="e.g. Investigate, Transfer, Write-off"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveAuditItem('${auditId}')">Add</button>
+    </div>
+  </div>`);
+}
+
+function saveAuditItem(auditId){
+  const sys=parseInt(document.getElementById('ai-sys').value)||0;
+  const phy=parseInt(document.getElementById('ai-phy').value)||0;
+  const diff=phy-sys;
+  addRow('auditItems',{
+    id:nextId('auditItems'),auditId,
+    sku:document.getElementById('ai-sku').value,
+    name:document.getElementById('ai-name').value,
+    systemQty:sys,physicalQty:phy,difference:diff,
+    status:diff===0?'Match':'Mismatch',
+    action:document.getElementById('ai-action').value||'Pending Review'
+  });
+  const audit=getTable('audits').find(a=>a.auditId===auditId);
+  if(audit){
+    const items=getTable('auditItems').filter(i=>i.auditId===auditId);
+    updateRow('audits',audit.id,{itemsAudited:items.length,mismatches:items.filter(i=>i.status==='Mismatch').length});
+  }
+  addAuditLog('ADD_AUDIT_ITEM',`Item added to ${auditId}: ${document.getElementById('ai-sku').value}`);
+  showToast('Item added to audit','success');
+  closeModal();
+  renderAudit();
+}
+</script>
+
+<script>
+// ============================================================
+// MODULE: REORDER MANAGEMENT
+// ============================================================
+function renderReorder(){
+  const parts=getTable('parts');
+  const pos=getTable('purchaseorders');
+  const lowStock=parts.filter(p=>p.qty<p.minQty);
+  const outOfStock=parts.filter(p=>p.qty===0);
+
+  function suggestQty(p){
+    const deficit=p.minQty-p.qty;
+    return Math.max(deficit*3,p.minQty);
+  }
+
+  const html=`
+  <div class="module-header">
+    <h2>🔄 Reorder Management</h2>
+    <p>Low stock alerts, purchase suggestions, and purchase order tracking</p>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-card danger"><div class="stat-label">Items Needing Reorder</div><div class="stat-value">${lowStock.length}</div></div>
+    <div class="stat-card danger"><div class="stat-label">Out of Stock</div><div class="stat-value">${outOfStock.length}</div></div>
+    <div class="stat-card warning"><div class="stat-label">Open POs</div><div class="stat-value">${pos.filter(p=>p.status==='Processing'||p.status==='Partial').length}</div></div>
+    <div class="stat-card danger"><div class="stat-label">Overdue POs</div><div class="stat-value">${pos.filter(p=>p.status==='Overdue').length}</div></div>
+  </div>
+
+  <div class="card" style="border-left:4px solid var(--danger)">
+    <div class="card-header"><h3>🚨 Reorder Suggestions</h3><span style="font-size:12px;color:var(--text2)">${lowStock.length} items below minimum level</span></div>
+    ${lowStock.length?`<div class="table-wrap"><table>
+      <thead><tr><th>SKU</th><th>Name</th><th>Location</th><th>Current Qty</th><th>Min Qty</th><th>Shortage</th><th>Suggested Reorder</th><th>Action</th></tr></thead>
+      <tbody>
+        ${lowStock.map(p=>`<tr>
+          <td><code style="font-size:11px">${p.sku}</code></td>
+          <td>${p.name}</td>
+          <td>${p.location}</td>
+          <td><strong style="color:${p.qty===0?'var(--danger)':'var(--warning)'}">${p.qty}</strong></td>
+          <td>${p.minQty}</td>
+          <td style="color:var(--danger)"><strong>${p.minQty-p.qty}</strong></td>
+          <td><strong>${suggestQty(p)} ${p.unit}</strong></td>
+          <td><button class="btn btn-primary btn-sm" onclick="createPOModal('${p.sku}','${p.name}',${suggestQty(p)},${p.price})">Create PO</button></td>
+        </tr>`).join('')}
+      </tbody>
+    </table></div>`:'<div class="empty-state"><div class="empty-icon">✅</div><p>All parts are adequately stocked</p></div>'}
+  </div>
+
+  <div class="card">
+    <div class="card-header"><h3>📄 Purchase Orders</h3><button class="btn btn-primary btn-sm" onclick="createPOModal()">+ New PO</button></div>
+    ${makeTable(
+      ['PO Number','Supplier','Item','Qty Ordered','Total Value','Order Date','Expected','Received','Status','Actions'],
+      pos.map(p=>[
+        `<strong>${p.poNumber}</strong>`,p.supplier,p.item,p.qty,
+        `₹${p.totalValue.toLocaleString()}`,fmtDate(p.orderDate),fmtDate(p.expectedDate),
+        `${p.receivedQty}/${p.qty}`,statusBadge(p.status),
+        `<div style="display:flex;gap:4px">
+          <button class="btn btn-primary btn-sm" onclick="updatePO(${p.id})">Update</button>
+          <button class="btn btn-danger btn-sm" onclick="deletePO(${p.id})">Delete</button>
+        </div>`
+      ])
+    )}
+  </div>`;
+
+  document.getElementById('main-content').innerHTML=html;
+}
+
+function createPOModal(sku,name,qty,price){
+  const suppliers=getTable('suppliers');
+  showModal(`<div class="modal-box">
+    <h3>📄 Create Purchase Order</h3>
+    <div class="form-group"><label>Supplier *</label>
+      <select id="po-sup">${suppliers.map(s=>`<option>${s.name}</option>`).join('')}<option>Other</option></select>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Item *</label><input id="po-item" value="${name||''}"></div>
+      <div class="form-group"><label>Qty *</label><input id="po-qty" type="number" value="${qty||1}"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Unit Price (₹)</label><input id="po-price" type="number" value="${price||0}"></div>
+      <div class="form-group"><label>Expected Delivery</label><input id="po-exp" type="date"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="savePO()">Create PO</button>
+    </div>
+  </div>`);
+}
+
+function savePO(){
+  const n=nextId('purchaseorders');
+  const poNum='PO-2026-'+String(n).padStart(3,'0');
+  const qty=parseInt(document.getElementById('po-qty').value)||0;
+  const price=parseFloat(document.getElementById('po-price').value)||0;
+  addRow('purchaseorders',{
+    id:n,poNumber:poNum,
+    supplier:document.getElementById('po-sup').value,
+    item:document.getElementById('po-item').value,
+    qty,unitPrice:price,totalValue:qty*price,
+    orderDate:new Date().toISOString(),
+    expectedDate:document.getElementById('po-exp').value?new Date(document.getElementById('po-exp').value).toISOString():'',
+    receivedQty:0,status:'Processing'
+  });
+  addAuditLog('CREATE_PO',`PO ${poNum} created for ${document.getElementById('po-item').value}`);
+  showToast('Purchase Order created','success');
+  closeModal();
+  renderReorder();
+}
+
+function updatePO(id){
+  const po=getTable('purchaseorders').find(x=>x.id===id);
+  if(!po)return;
+  showModal(`<div class="modal-box">
+    <h3>✏️ Update PO — ${po.poNumber}</h3>
+    <div class="form-group"><label>Status</label>
+      <select id="upd-status">
+        ${['Processing','Partial','Received','Overdue','Cancelled'].map(s=>`<option ${s===po.status?'selected':''}>${s}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group"><label>Received Qty</label><input id="upd-rcv" type="number" value="${po.receivedQty}"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="savePOUpdate(${id})">Update</button>
+    </div>
+  </div>`);
+}
+
+function savePOUpdate(id){
+  const po=getTable('purchaseorders').find(x=>x.id===id);
+  const ns=document.getElementById('upd-status').value;
+  const rcv=parseInt(document.getElementById('upd-rcv').value)||0;
+  updateRow('purchaseorders',id,{status:ns,receivedQty:rcv});
+  addAuditLog('UPDATE_PO',`${po.poNumber}: ${po.status} → ${ns}, received ${rcv}`);
+  showToast('PO updated','success');
+  closeModal();
+  renderReorder();
+}
+
+function deletePO(id){
+  const po=getTable('purchaseorders').find(x=>x.id===id);
+  confirm2(`Delete PO "${po.poNumber}"?`,function(){
+    deleteRow('purchaseorders',id);
+    addAuditLog('DELETE_PO',`PO ${po.poNumber} deleted`);
+    showToast('PO deleted','success');
+    renderReorder();
+  });
+}
+
+// ============================================================
+// MODULE: AGING INVENTORY
+// ============================================================
+function renderAging(){
+  const vehicles=getTable('vehicles');
+  const parts=getTable('parts');
+
+  const agingV=vehicles.map(v=>({...v,age:daysSince(v.receivedDate)})).sort((a,b)=>b.age-a.age);
+  const agingP=parts.map(p=>({...p,age:daysSince(p.lastUpdated)})).sort((a,b)=>b.age-a.age);
+
+  function riskLevel(days){
+    if(days>180)return{level:'Critical',color:'var(--danger)',action:'Immediate discount/transfer'};
+    if(days>90)return{level:'High',color:'var(--warning)',action:'Plan discount or reallocation'};
+    if(days>45)return{level:'Medium',color:'var(--accent)',action:'Monitor closely'};
+    return{level:'Low',color:'var(--success)',action:'Normal'};
+  }
+
+  const critV=agingV.filter(v=>v.age>90&&v.status!=='Sold'&&v.status!=='Delivered');
+  const critP=agingP.filter(p=>p.age>30);
+  const totalAgingValue=critV.reduce((s,v)=>s+v.price,0);
+
+  const html=`
+  <div class="module-header">
+    <h2>⏳ Aging Inventory</h2>
+    <p>Identify slow-moving, dead stock and high holding-cost inventory</p>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-card danger"><div class="stat-label">Vehicles > 90 Days</div><div class="stat-value">${critV.length}</div></div>
+    <div class="stat-card warning"><div class="stat-label">Vehicles > 45 Days</div><div class="stat-value">${agingV.filter(v=>v.age>45&&v.status!=='Sold'&&v.status!=='Delivered').length}</div></div>
+    <div class="stat-card danger"><div class="stat-label">Aging Vehicle Value</div><div class="stat-value" style="font-size:16px">₹${(totalAgingValue/100000).toFixed(1)}L</div></div>
+    <div class="stat-card warning"><div class="stat-label">Parts Not Updated > 30d</div><div class="stat-value">${critP.length}</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><h3>🚗 Aging Vehicle Report</h3></div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>VIN</th><th>Model</th><th>Color</th><th>Location</th><th>Status</th><th>Days in Inventory</th><th>Risk Level</th><th>Suggested Action</th></tr></thead>
+      <tbody>
+        ${agingV.filter(v=>v.status!=='Sold'&&v.status!=='Delivered').map(v=>{
+          const r=riskLevel(v.age);
+          return`<tr>
+            <td><code style="font-size:11px">${v.vin}</code></td>
+            <td>${v.model}</td><td>${v.color}</td><td>${v.location}</td>
+            <td>${statusBadge(v.status)}</td>
+            <td><strong style="color:${r.color}">${v.age} days</strong></td>
+            <td><span class="badge" style="background:${r.color}20;color:${r.color}">${r.level}</span></td>
+            <td style="font-size:12px;color:var(--text2)">${r.action}</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table></div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><h3>🔧 Spare Parts — Stock Age Report</h3></div>
+    ${makeTable(
+      ['SKU','Name','Category','Location','Qty','Days Since Update','Status'],
+      agingP.map(p=>{
+        const r=riskLevel(p.age);
+        return[
+          `<code style="font-size:11px">${p.sku}</code>`,p.name,p.category,p.location,p.qty,
+          `<strong style="color:${r.color}">${p.age} days</strong>`,
+          `<span class="badge" style="background:${r.color}20;color:${r.color}">${r.level}</span>`
+        ];
+      })
+    )}
+  </div>`;
+  document.getElementById('main-content').innerHTML=html;
+}
+</script>
+
+<script>
+// ============================================================
+// MODULE: DAMAGE MANAGEMENT
+// ============================================================
+function renderDamage(){
+  const damages=getTable('damages');
+  const html=`
+  <div class="module-header">
+    <h2>⚠️ Damage Management</h2>
+    <p>Track damaged vehicles and parts with repair and insurance workflows</p>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-card danger"><div class="stat-label">Total Damage Reports</div><div class="stat-value">${damages.length}</div></div>
+    <div class="stat-card warning"><div class="stat-label">Under Repair</div><div class="stat-value">${damages.filter(d=>d.status==='Under Repair').length}</div></div>
+    <div class="stat-card warning"><div class="stat-label">Under Review</div><div class="stat-value">${damages.filter(d=>d.status==='Under Review').length}</div></div>
+    <div class="stat-card info"><div class="stat-label">Claims Raised</div><div class="stat-value">${damages.filter(d=>d.insuranceClaim==='Raised').length}</div></div>
+  </div>
+  <div class="card">
+    <div class="card-header"><h3>Damage Reports</h3><button class="btn btn-danger btn-sm" onclick="addDamageModal()">+ Report Damage</button></div>
+    ${damages.length?`<div style="display:flex;flex-direction:column;gap:12px">
+      ${damages.map(d=>`
+        <div class="card" style="margin-bottom:0;border-left:4px solid var(--danger)">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+            <div style="flex:1">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+                <strong style="font-size:15px">${d.damageId}</strong>
+                ${statusBadge(d.status)}
+                <span class="badge badge-${d.type==='Vehicle'?'info':'neutral'}">${d.type}</span>
+              </div>
+              <div style="font-size:14px;font-weight:600;margin-bottom:4px">${d.itemName} <code style="font-size:11px;color:var(--text2)">(${d.itemRef})</code></div>
+              <div style="font-size:13px;color:var(--text2);margin-bottom:8px">📍 ${d.location} | Detected: ${fmtDate(d.detectedDate)} by ${d.detectedBy}</div>
+              <div style="font-size:13px;margin-bottom:6px"><strong>Damage:</strong> ${d.damageType}</div>
+              <div style="display:flex;gap:20px;font-size:12px;color:var(--text2)">
+                <span>Responsible: <strong style="color:var(--text)">${d.responsible}</strong></span>
+                <span>Insurance: <strong style="color:var(--text)">${d.insuranceClaim}</strong></span>
+                ${d.repairCost?`<span>Repair Cost: <strong style="color:var(--warning)">₹${d.repairCost.toLocaleString()}</strong></span>`:''}
+              </div>
+              ${d.notes?`<div style="font-size:12px;color:var(--text2);margin-top:6px;padding:6px;background:var(--card2);border-radius:4px">${d.notes}</div>`:''}
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
+              <button class="btn btn-primary btn-sm" onclick="editDamage(${d.id})">Update</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteDamage(${d.id})">Delete</button>
+            </div>
+          </div>
+        </div>`).join('')}
+    </div>`:'<div class="empty-state"><div class="empty-icon">✅</div><p>No damage reports recorded</p></div>'}
+  </div>`;
+  document.getElementById('main-content').innerHTML=html;
+}
+
+function addDamageModal(){
+  showModal(`<div class="modal-box">
+    <h3>⚠️ Report Damage</h3>
+    <div class="form-row">
+      <div class="form-group"><label>Type</label><select id="dm-type"><option>Vehicle</option><option>Parts</option></select></div>
+      <div class="form-group"><label>Item Ref (VIN or SKU)</label><input id="dm-ref" placeholder="VIN or SKU"></div>
+    </div>
+    <div class="form-group"><label>Item Name</label><input id="dm-name" placeholder="Vehicle model or Part name"></div>
+    <div class="form-row">
+      <div class="form-group"><label>Location</label><input id="dm-loc" placeholder="Where damage was detected"></div>
+      <div class="form-group"><label>Responsible Party</label><input id="dm-resp" placeholder="e.g. Transport Vendor"></div>
+    </div>
+    <div class="form-group"><label>Damage Description</label><input id="dm-desc" placeholder="Describe the damage"></div>
+    <div class="form-row">
+      <div class="form-group"><label>Insurance Claim</label><select id="dm-ins"><option>Not Required</option><option>Raised</option><option>Claimed</option></select></div>
+      <div class="form-group"><label>Estimated Repair Cost (₹)</label><input id="dm-cost" type="number" value="0"></div>
+    </div>
+    <div class="form-group"><label>Notes</label><input id="dm-notes" placeholder="Additional notes"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-danger" onclick="saveDamage()">Report Damage</button>
+    </div>
+  </div>`);
+}
+
+function saveDamage(){
+  const n=nextId('damages');
+  const did='DMG-'+String(n).padStart(3,'0');
+  addRow('damages',{
+    id:n,damageId:did,
+    type:document.getElementById('dm-type').value,
+    itemRef:document.getElementById('dm-ref').value,
+    itemName:document.getElementById('dm-name').value,
+    location:document.getElementById('dm-loc').value,
+    damageType:document.getElementById('dm-desc').value,
+    detectedDate:new Date().toISOString(),
+    detectedBy:currentUser.name,
+    responsible:document.getElementById('dm-resp').value,
+    status:'Under Review',
+    insuranceClaim:document.getElementById('dm-ins').value,
+    repairCost:parseFloat(document.getElementById('dm-cost').value)||0,
+    notes:document.getElementById('dm-notes').value
+  });
+  addAuditLog('REPORT_DAMAGE',`Damage reported: ${did} — ${document.getElementById('dm-name').value}`);
+  showToast('Damage report created','success');
+  closeModal();
+  renderDamage();
+}
+
+function editDamage(id){
+  const d=getTable('damages').find(x=>x.id===id);
+  if(!d)return;
+  showModal(`<div class="modal-box">
+    <h3>✏️ Update Damage — ${d.damageId}</h3>
+    <div class="form-group"><label>Status</label>
+      <select id="ed-status">${['Under Review','Under Repair','Repaired','Scrapped','Resolved'].map(s=>`<option ${s===d.status?'selected':''}>${s}</option>`).join('')}</select>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Insurance Claim</label>
+        <select id="ed-ins">${['Not Required','Raised','Claimed','Rejected'].map(s=>`<option ${s===d.insuranceClaim?'selected':''}>${s}</option>`).join('')}</select>
+      </div>
+      <div class="form-group"><label>Repair Cost (₹)</label><input id="ed-cost" type="number" value="${d.repairCost}"></div>
+    </div>
+    <div class="form-group"><label>Notes</label><input id="ed-notes" value="${d.notes||''}"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveDamageEdit(${id})">Save</button>
+    </div>
+  </div>`);
+}
+
+function saveDamageEdit(id){
+  const d=getTable('damages').find(x=>x.id===id);
+  const ns=document.getElementById('ed-status').value;
+  updateRow('damages',id,{
+    status:ns,
+    insuranceClaim:document.getElementById('ed-ins').value,
+    repairCost:parseFloat(document.getElementById('ed-cost').value)||0,
+    notes:document.getElementById('ed-notes').value
+  });
+  addAuditLog('UPDATE_DAMAGE',`${d.damageId}: ${d.status} → ${ns}`);
+  showToast('Damage record updated','success');
+  closeModal();
+  renderDamage();
+}
+
+function deleteDamage(id){
+  const d=getTable('damages').find(x=>x.id===id);
+  confirm2(`Delete damage report "${d.damageId}"?`,function(){
+    deleteRow('damages',id);
+    addAuditLog('DELETE_DAMAGE',`Damage report ${d.damageId} deleted`);
+    showToast('Damage report deleted','success');
+    renderDamage();
+  });
+}
+
+// ============================================================
+// MODULE: SUPPLIER MANAGEMENT
+// ============================================================
+function renderSupplier(){
+  const suppliers=getTable('suppliers');
+  const pos=getTable('purchaseorders');
+
+  function ratingBadge(r){
+    if(r==='Good')return'<span class="badge badge-success">Good</span>';
+    if(r==='Poor')return'<span class="badge badge-danger">Poor</span>';
+    return'<span class="badge badge-warning">Average</span>';
+  }
+
+  const html=`
+  <div class="module-header">
+    <h2>🏭 Supplier Management</h2>
+    <p>Supplier profiles, PO tracking, and vendor performance analytics</p>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-card accent"><div class="stat-label">Total Suppliers</div><div class="stat-value">${suppliers.length}</div></div>
+    <div class="stat-card success"><div class="stat-label">Good Performers</div><div class="stat-value">${suppliers.filter(s=>s.rating==='Good').length}</div></div>
+    <div class="stat-card danger"><div class="stat-label">Poor Performers</div><div class="stat-value">${suppliers.filter(s=>s.rating==='Poor').length}</div></div>
+    <div class="stat-card warning"><div class="stat-label">Pending Orders</div><div class="stat-value">${suppliers.reduce((s,x)=>s+x.pendingOrders,0)}</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><h3>Supplier Performance Dashboard</h3><button class="btn btn-primary btn-sm" onclick="addSupplierModal()">+ Add Supplier</button></div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Supplier</th><th>Contact</th><th>Category</th><th>Location</th><th>On-Time Delivery</th><th>Quality Issues</th><th>Pending Orders</th><th>Rating</th><th>Actions</th></tr></thead>
+      <tbody>
+        ${suppliers.map(s=>`<tr>
+          <td><strong>${s.name}</strong></td>
+          <td><div style="font-size:12px">${s.contact}</div><div style="font-size:11px;color:var(--text2)">${s.phone}</div></td>
+          <td><span class="tag">${s.category}</span></td>
+          <td>${s.location}</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="progress-bar" style="width:80px"><div class="progress-fill" style="width:${s.onTime}%;background:${s.onTime>=85?'var(--success)':s.onTime>=70?'var(--warning)':'var(--danger)'}"></div></div>
+              <span style="font-size:12px;font-weight:600">${s.onTime}%</span>
+            </div>
+          </td>
+          <td><strong style="color:${s.qualityIssues>8?'var(--danger)':s.qualityIssues>4?'var(--warning)':'var(--success)'}">${s.qualityIssues}</strong></td>
+          <td>${s.pendingOrders}</td>
+          <td>${ratingBadge(s.rating)}</td>
+          <td><div style="display:flex;gap:4px">
+            <button class="btn btn-primary btn-sm" onclick="editSupplier(${s.id})">Edit</button>
+            <button class="btn btn-secondary btn-sm" onclick="viewSupplierPOs('${s.name}')">POs</button>
+          </div></td>
+        </tr>`).join('')}
+      </tbody>
+    </table></div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><h3>📄 Purchase Order Status</h3></div>
+    ${makeTable(
+      ['PO Number','Supplier','Item','Ordered','Received','Expected','Status'],
+      pos.map(p=>[
+        `<strong>${p.poNumber}</strong>`,p.supplier,p.item,p.qty,
+        `${p.receivedQty}/${p.qty}`,fmtDate(p.expectedDate),statusBadge(p.status)
+      ])
+    )}
+  </div>`;
+  document.getElementById('main-content').innerHTML=html;
+}
+
+function addSupplierModal(){
+  showModal(`<div class="modal-box">
+    <h3>➕ Add Supplier</h3>
+    <div class="form-row">
+      <div class="form-group"><label>Company Name *</label><input id="ns-name" placeholder="Supplier company name"></div>
+      <div class="form-group"><label>Contact Person</label><input id="ns-contact" placeholder="Contact name"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Phone</label><input id="ns-phone" placeholder="Phone number"></div>
+      <div class="form-group"><label>Email</label><input id="ns-email" placeholder="Email address"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Category</label><input id="ns-cat" placeholder="e.g. Engine Parts"></div>
+      <div class="form-group"><label>Location</label><input id="ns-loc" placeholder="City"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveSupplier()">Add Supplier</button>
+    </div>
+  </div>`);
+}
+
+function saveSupplier(){
+  const name=document.getElementById('ns-name').value.trim();
+  if(!name){showToast('Company name required','error');return;}
+  addRow('suppliers',{
+    id:nextId('suppliers'),name,
+    contact:document.getElementById('ns-contact').value,
+    phone:document.getElementById('ns-phone').value,
+    email:document.getElementById('ns-email').value,
+    category:document.getElementById('ns-cat').value,
+    location:document.getElementById('ns-loc').value,
+    rating:'Average',onTime:80,qualityIssues:0,pendingOrders:0
+  });
+  addAuditLog('ADD_SUPPLIER',`Supplier added: ${name}`);
+  showToast('Supplier added','success');
+  closeModal();
+  renderSupplier();
+}
+
+function editSupplier(id){
+  const s=getTable('suppliers').find(x=>x.id===id);
+  if(!s)return;
+  showModal(`<div class="modal-box">
+    <h3>✏️ Edit Supplier — ${s.name}</h3>
+    <div class="form-row">
+      <div class="form-group"><label>Contact</label><input id="es-contact" value="${s.contact}"></div>
+      <div class="form-group"><label>Phone</label><input id="es-phone" value="${s.phone}"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>On-Time %</label><input id="es-ontime" type="number" min="0" max="100" value="${s.onTime}"></div>
+      <div class="form-group"><label>Quality Issues</label><input id="es-qi" type="number" value="${s.qualityIssues}"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Pending Orders</label><input id="es-pending" type="number" value="${s.pendingOrders}"></div>
+      <div class="form-group"><label>Rating</label>
+        <select id="es-rating"><option ${s.rating==='Good'?'selected':''}>Good</option><option ${s.rating==='Average'?'selected':''}>Average</option><option ${s.rating==='Poor'?'selected':''}>Poor</option></select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveSupplierEdit(${id})">Save</button>
+    </div>
+  </div>`);
+}
+
+function saveSupplierEdit(id){
+  updateRow('suppliers',id,{
+    contact:document.getElementById('es-contact').value,
+    phone:document.getElementById('es-phone').value,
+    onTime:parseInt(document.getElementById('es-ontime').value)||0,
+    qualityIssues:parseInt(document.getElementById('es-qi').value)||0,
+    pendingOrders:parseInt(document.getElementById('es-pending').value)||0,
+    rating:document.getElementById('es-rating').value
+  });
+  const s=getTable('suppliers').find(x=>x.id===id);
+  addAuditLog('UPDATE_SUPPLIER',`Supplier updated: ${s.name}`);
+  showToast('Supplier updated','success');
+  closeModal();
+  renderSupplier();
+}
+
+function viewSupplierPOs(supplierName){
+  const pos=getTable('purchaseorders').filter(p=>p.supplier===supplierName);
+  showModal(`<div class="modal-box" style="max-width:700px">
+    <h3>📄 Purchase Orders — ${supplierName}</h3>
+    ${makeTable(['PO#','Item','Qty','Value','Expected','Status'],
+      pos.map(p=>[p.poNumber,p.item,p.qty,`₹${p.totalValue.toLocaleString()}`,fmtDate(p.expectedDate),statusBadge(p.status)]),
+      'No orders found')}
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal()">Close</button></div>
+  </div>`);
+}
+</script>
+
+<script>
+// ============================================================
+// MODULE: ALLOCATION MANAGEMENT
+// ============================================================
+function renderAllocation(){
+  const allocs=getTable('allocations');
+  const vehicles=getTable('vehicles');
+  const availableVehicles=vehicles.filter(v=>v.status==='Available');
+
+  const html=`
+  <div class="module-header">
+    <h2>📦 Allocation Management</h2>
+    <p>Assign available vehicles to dealer bookings and customer orders</p>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-card accent"><div class="stat-label">Total Allocations</div><div class="stat-value">${allocs.length}</div></div>
+    <div class="stat-card success"><div class="stat-label">Fulfilled</div><div class="stat-value">${allocs.filter(a=>a.status==='Fulfilled').length}</div></div>
+    <div class="stat-card warning"><div class="stat-label">Pending</div><div class="stat-value">${allocs.filter(a=>a.status==='Pending').length}</div></div>
+    <div class="stat-card info"><div class="stat-label">Available Vehicles</div><div class="stat-value">${availableVehicles.length}</div></div>
+  </div>
+
+  ${allocs.filter(a=>a.status==='Pending').length?`<div class="card" style="border-left:4px solid var(--warning)">
+    <div class="card-header"><h3>⏳ Pending Allocations — Action Required</h3></div>
+    ${allocs.filter(a=>a.status==='Pending').map(a=>`
+      <div class="alert-item warning">
+        <div class="alert-icon">📦</div>
+        <div class="alert-body" style="flex:1">
+          <div class="alert-title">${a.allocationId} — ${a.customerName}</div>
+          <div class="alert-desc">Booking: ${a.bookingId} | Model: ${a.model} ${a.color} | Dealer: ${a.dealer}</div>
+          <div class="alert-desc">Booked: ${fmtDate(a.bookingDate)} | Payment: ${a.paymentStatus}</div>
+          ${a.notes?`<div class="alert-meta">${a.notes}</div>`:''}
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0">
+          <button class="btn btn-primary btn-sm" onclick="fulfillAllocation(${a.id})">Allocate Vehicle</button>
+          <button class="btn btn-secondary btn-sm" onclick="editAllocation(${a.id})">Edit</button>
+        </div>
+      </div>`).join('')}
+  </div>`:''}
+
+  <div class="card">
+    <div class="card-header"><h3>All Allocations</h3><button class="btn btn-primary btn-sm" onclick="addAllocationModal()">+ New Booking</button></div>
+    ${makeTable(
+      ['Allocation ID','Booking ID','Customer','Model','Color','VIN','Dealer','Booked','Payment','Status','Actions'],
+      allocs.map(a=>[
+        `<strong>${a.allocationId}</strong>`,a.bookingId,a.customerName,a.model,a.color,
+        a.vin?`<code style="font-size:11px">${a.vin}</code>`:'<span style="color:var(--text2)">—</span>',
+        a.dealer,fmtDate(a.bookingDate),
+        `<span class="badge badge-${a.paymentStatus==='Full Payment'?'success':'warning'}">${a.paymentStatus}</span>`,
+        statusBadge(a.status),
+        `<div style="display:flex;gap:4px">
+          ${a.status==='Pending'?`<button class="btn btn-primary btn-sm" onclick="fulfillAllocation(${a.id})">Allocate</button>`:''}
+          <button class="btn btn-secondary btn-sm" onclick="editAllocation(${a.id})">Edit</button>
+        </div>`
+      ])
+    )}
+  </div>
+
+  <div class="card">
+    <div class="card-header"><h3>🚗 Available Vehicles for Allocation</h3></div>
+    ${makeTable(
+      ['VIN','Model','Variant','Color','Location','Price'],
+      availableVehicles.map(v=>[
+        `<code style="font-size:11px">${v.vin}</code>`,v.model,v.variant,v.color,v.location,`₹${v.price.toLocaleString()}`
+      ]),'No available vehicles')}
+  </div>`;
+  document.getElementById('main-content').innerHTML=html;
+}
+
+function addAllocationModal(){
+  showModal(`<div class="modal-box">
+    <h3>➕ New Booking / Allocation</h3>
+    <div class="form-row">
+      <div class="form-group"><label>Booking ID *</label><input id="na-bid" placeholder="e.g. BKG-1030"></div>
+      <div class="form-group"><label>Customer Name *</label><input id="na-cust" placeholder="Customer full name"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Model Requested</label><input id="na-model" placeholder="e.g. Baleno Alpha"></div>
+      <div class="form-group"><label>Color Preference</label><input id="na-color" placeholder="e.g. Pearl White"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Dealer</label><input id="na-dealer" placeholder="Dealer name"></div>
+      <div class="form-group"><label>Payment Status</label>
+        <select id="na-pay"><option>Token Amount</option><option>50% Advance</option><option>Full Payment</option></select>
+      </div>
+    </div>
+    <div class="form-group"><label>Notes</label><input id="na-notes" placeholder="Any special instructions"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveAllocation()">Create Booking</button>
+    </div>
+  </div>`);
+}
+
+function saveAllocation(){
+  const bid=document.getElementById('na-bid').value.trim();
+  const cust=document.getElementById('na-cust').value.trim();
+  if(!bid||!cust){showToast('Booking ID and Customer Name required','error');return;}
+  const n=nextId('allocations');
+  addRow('allocations',{
+    id:n,allocationId:'ALO-'+String(n).padStart(3,'0'),
+    bookingId:bid,customerName:cust,
+    model:document.getElementById('na-model').value,
+    color:document.getElementById('na-color').value,
+    vin:'',dealer:document.getElementById('na-dealer').value,
+    bookingDate:new Date().toISOString(),allocationDate:'',
+    paymentStatus:document.getElementById('na-pay').value,
+    status:'Pending',notes:document.getElementById('na-notes').value
+  });
+  addAuditLog('NEW_BOOKING',`Booking created: ${bid} for ${cust}`);
+  showToast('Booking created','success');
+  closeModal();
+  renderAllocation();
+}
+
+function fulfillAllocation(id){
+  const a=getTable('allocations').find(x=>x.id===id);
+  const vehicles=getTable('vehicles').filter(v=>v.status==='Available');
+  showModal(`<div class="modal-box">
+    <h3>🚗 Allocate Vehicle — ${a.allocationId}</h3>
+    <p style="color:var(--text2);margin-bottom:12px">Customer: <strong>${a.customerName}</strong> | Requested: <strong>${a.model} ${a.color}</strong></p>
+    <div class="form-group"><label>Select Vehicle (VIN)</label>
+      <select id="fa-vin">
+        <option value="">-- Select Available Vehicle --</option>
+        ${vehicles.map(v=>`<option value="${v.vin}">${v.vin} — ${v.model} ${v.variant} ${v.color} (${v.location})</option>`).join('')}
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-success" onclick="saveAllocationFulfill(${id})">Confirm Allocation</button>
+    </div>
+  </div>`);
+}
+
+function saveAllocationFulfill(id){
+  const vin=document.getElementById('fa-vin').value;
+  if(!vin){showToast('Please select a vehicle','error');return;}
+  const a=getTable('allocations').find(x=>x.id===id);
+  updateRow('allocations',id,{vin,status:'Processing',allocationDate:new Date().toISOString()});
+  const vehicle=getTable('vehicles').find(v=>v.vin===vin);
+  if(!vehicle){showToast('Selected vehicle not found','error');return;}
+  updateRow('vehicles',vehicle.id,{status:'Allocated'});
+  addAuditLog('ALLOCATE_VEHICLE',`VIN ${vin} allocated to ${a.customerName} (${a.bookingId})`);
+  showToast('Vehicle allocated successfully','success');
+  closeModal();
+  renderAllocation();
+}
+
+function editAllocation(id){
+  const a=getTable('allocations').find(x=>x.id===id);
+  showModal(`<div class="modal-box">
+    <h3>✏️ Edit Allocation — ${a.allocationId}</h3>
+    <div class="form-group"><label>Status</label>
+      <select id="ea-status">${['Pending','Processing','Fulfilled','Cancelled'].map(s=>`<option ${s===a.status?'selected':''}>${s}</option>`).join('')}</select>
+    </div>
+    <div class="form-group"><label>Notes</label><input id="ea-notes" value="${a.notes||''}"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveAllocationEdit(${id})">Save</button>
+    </div>
+  </div>`);
+}
+
+function saveAllocationEdit(id){
+  const a=getTable('allocations').find(x=>x.id===id);
+  const ns=document.getElementById('ea-status').value;
+  updateRow('allocations',id,{status:ns,notes:document.getElementById('ea-notes').value});
+  addAuditLog('UPDATE_ALLOCATION',`${a.allocationId}: ${a.status} → ${ns}`);
+  showToast('Allocation updated','success');
+  closeModal();
+  renderAllocation();
+}
+</script>
+
+<script>
+// ============================================================
+// MODULE: ALERTS & ESCALATIONS
+// ============================================================
+function renderAlerts(){
+  const alerts=getTable('alerts');
+  let showResolved=false;
+  let filterType='';
+
+  function render(){
+    let data=alerts;
+    if(!showResolved)data=data.filter(a=>!a.resolved);
+    if(filterType)data=data.filter(a=>a.type===filterType);
+    const container=document.getElementById('alerts-list');
+    if(!container)return;
+    container.innerHTML=data.length?data.map(a=>`
+      <div class="alert-item ${a.type}" style="background:var(--card2)">
+        <div class="alert-icon">${a.type==='critical'?'🚨':a.type==='warning'?'⚠️':'ℹ️'}</div>
+        <div class="alert-body" style="flex:1">
+          <div class="alert-title">${a.title} ${a.resolved?'<span class="badge badge-success" style="font-size:10px">Resolved</span>':''}</div>
+          <div class="alert-desc">${a.description}</div>
+          <div class="alert-meta">Module: ${a.module} | Created: ${fmtDateTime(a.createdAt)} ${a.escalatedTo?`| Escalated to: <strong>${a.escalatedTo}</strong>`:''}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
+          ${!a.resolved?`<button class="btn btn-success btn-sm" onclick="resolveAlert(${a.id})">Resolve</button>`:''}
+          <button class="btn btn-danger btn-sm" onclick="deleteAlert(${a.id})">Delete</button>
+        </div>
+      </div>`).join('')
+      :'<div class="empty-state"><div class="empty-icon">✅</div><p>No alerts found</p></div>';
+    updateAlertBadge();
+  }
+
+  const unresolvedCritical=alerts.filter(a=>!a.resolved&&a.type==='critical').length;
+  const unresolvedWarning=alerts.filter(a=>!a.resolved&&a.type==='warning').length;
+  const unresolvedInfo=alerts.filter(a=>!a.resolved&&a.type==='info').length;
+
+  const html=`
+  <div class="module-header">
+    <h2>🔔 Alerts &amp; Escalations</h2>
+    <p>Automated notifications and management escalation workflows</p>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-card danger"><div class="stat-label">Critical Alerts</div><div class="stat-value">${unresolvedCritical}</div></div>
+    <div class="stat-card warning"><div class="stat-label">Warnings</div><div class="stat-value">${unresolvedWarning}</div></div>
+    <div class="stat-card info"><div class="stat-label">Informational</div><div class="stat-value">${unresolvedInfo}</div></div>
+    <div class="stat-card success"><div class="stat-label">Resolved</div><div class="stat-value">${alerts.filter(a=>a.resolved).length}</div></div>
+  </div>
+  <div class="filter-bar">
+    <select onchange="filterType=this.value;render()">
+      <option value="">All Types</option>
+      <option value="critical">Critical</option>
+      <option value="warning">Warning</option>
+      <option value="info">Info</option>
+    </select>
+    <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text2);cursor:pointer">
+      <input type="checkbox" onchange="showResolved=this.checked;render()"> Show Resolved
+    </label>
+    <button class="btn btn-primary btn-sm" onclick="addAlertModal()">+ Add Alert</button>
+    <button class="btn btn-success btn-sm" onclick="resolveAllAlerts()">Resolve All</button>
+  </div>
+  <div id="alerts-list"></div>`;
+  document.getElementById('main-content').innerHTML=html;
+  render();
+}
+
+function resolveAlert(id){
+  updateRow('alerts',id,{resolved:true,resolvedAt:new Date().toISOString(),resolvedBy:currentUser.name});
+  const a=getTable('alerts').find(x=>x.id===id);
+  addAuditLog('RESOLVE_ALERT',`Alert resolved: ${a.title}`);
+  showToast('Alert resolved','success');
+  renderAlerts();
+}
+
+function deleteAlert(id){
+  const a=getTable('alerts').find(x=>x.id===id);
+  confirm2(`Delete alert "${a.title}"?`,function(){
+    deleteRow('alerts',id);
+    addAuditLog('DELETE_ALERT',`Alert deleted: ${a.title}`);
+    showToast('Alert deleted','success');
+    renderAlerts();
+  });
+}
+
+function resolveAllAlerts(){
+  confirm2('Resolve all open alerts?',function(){
+    const t=getTable('alerts');
+    t.forEach(a=>{if(!a.resolved){a.resolved=true;a.resolvedAt=new Date().toISOString();a.resolvedBy=currentUser.name;}});
+    setTable('alerts',t);
+    addAuditLog('RESOLVE_ALL_ALERTS','All alerts resolved');
+    showToast('All alerts resolved','success');
+    renderAlerts();
+  });
+}
+
+function addAlertModal(){
+  showModal(`<div class="modal-box">
+    <h3>🔔 Add Alert</h3>
+    <div class="form-group"><label>Type</label>
+      <select id="aa-type"><option value="critical">Critical</option><option value="warning">Warning</option><option value="info">Info</option></select>
+    </div>
+    <div class="form-group"><label>Title *</label><input id="aa-title" placeholder="Alert title"></div>
+    <div class="form-group"><label>Description</label><input id="aa-desc" placeholder="Detailed description"></div>
+    <div class="form-row">
+      <div class="form-group"><label>Module</label>
+        <select id="aa-module"><option>dashboard</option><option>vehicle</option><option>parts</option><option>transit</option><option>audit</option><option>supplier</option><option>damage</option><option>aging</option><option>allocation</option></select>
+      </div>
+      <div class="form-group"><label>Escalate To</label><input id="aa-esc" placeholder="Role or person name"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveAlert()">Create Alert</button>
+    </div>
+  </div>`);
+}
+
+function saveAlert(){
+  const title=document.getElementById('aa-title').value.trim();
+  if(!title){showToast('Title required','error');return;}
+  addRow('alerts',{
+    id:nextId('alerts'),
+    type:document.getElementById('aa-type').value,
+    title,description:document.getElementById('aa-desc').value,
+    module:document.getElementById('aa-module').value,
+    escalatedTo:document.getElementById('aa-esc').value,
+    createdAt:new Date().toISOString(),resolved:false
+  });
+  addAuditLog('CREATE_ALERT',`Alert created: ${title}`);
+  showToast('Alert created','success');
+  closeModal();
+  renderAlerts();
+}
+
+// ============================================================
+// MODULE: REPORTS & ANALYTICS
+// ============================================================
+function renderReports(){
+  const vehicles=getTable('vehicles');
+  const parts=getTable('parts');
+  const shipments=getTable('shipments');
+  const damages=getTable('damages');
+  const allocs=getTable('allocations');
+  const suppliers=getTable('suppliers');
+
+  const vByLoc={};
+  vehicles.forEach(v=>{vByLoc[v.location]=(vByLoc[v.location]||0)+1;});
+  const vByStatus={};
+  vehicles.forEach(v=>{vByStatus[v.status]=(vByStatus[v.status]||0)+1;});
+  const partsByLoc={};
+  parts.forEach(p=>{partsByLoc[p.location]=(partsByLoc[p.location]||0)+p.qty;});
+  const partsByCat={};
+  parts.forEach(p=>{partsByCat[p.category]=(partsByCat[p.category]||0)+p.qty;});
+
+  const maxVLoc=Math.max(...Object.values(vByLoc),1);
+  const maxVStat=Math.max(...Object.values(vByStatus),1);
+  const maxPLoc=Math.max(...Object.values(partsByLoc),1);
+  const maxPCat=Math.max(...Object.values(partsByCat),1);
+
+  const totalVehicleValue=vehicles.filter(v=>v.status!=='Sold'&&v.status!=='Delivered').reduce((s,v)=>s+v.price,0);
+  const totalPartsValue=parts.reduce((s,p)=>s+p.qty*p.price,0);
+  const agingVehicles=vehicles.filter(v=>daysSince(v.receivedDate)>90&&v.status!=='Sold'&&v.status!=='Delivered');
+
+  const html=`
+  <div class="module-header">
+    <h2>📈 Reports &amp; Analytics</h2>
+    <p>Business intelligence dashboards and analytics for data-driven decisions</p>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card accent"><div class="stat-label">Total Vehicle Value (Active)</div><div class="stat-value" style="font-size:16px">₹${(totalVehicleValue/10000000).toFixed(2)} Cr</div></div>
+    <div class="stat-card success"><div class="stat-label">Total Parts Value</div><div class="stat-value" style="font-size:16px">₹${(totalPartsValue/100000).toFixed(1)} L</div></div>
+    <div class="stat-card warning"><div class="stat-label">Aging Vehicles (90d+)</div><div class="stat-value">${agingVehicles.length}</div></div>
+    <div class="stat-card danger"><div class="stat-label">Total Damage Reports</div><div class="stat-value">${damages.length}</div></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header"><h3>🚗 Vehicles by Location</h3></div>
+      <div class="bar-chart">
+        ${Object.entries(vByLoc).sort((a,b)=>b[1]-a[1]).map(([l,c])=>`
+          <div class="bar-row">
+            <div class="bar-label">${l}</div>
+            <div class="bar-track"><div class="bar-fill" style="width:${Math.round(c/maxVLoc*100)}%"></div></div>
+            <div class="bar-value">${c}</div>
+          </div>`).join('')}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><h3>🔧 Parts Qty by Category</h3></div>
+      <div class="bar-chart">
+        ${Object.entries(partsByCat).sort((a,b)=>b[1]-a[1]).map(([cat,qty])=>`
+          <div class="bar-row">
+            <div class="bar-label">${cat}</div>
+            <div class="bar-track"><div class="bar-fill" style="width:${Math.round(qty/maxPCat*100)}%;background:var(--success)"></div></div>
+            <div class="bar-value">${qty}</div>
+          </div>`).join('')}
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header"><h3>📊 Vehicle Status Distribution</h3></div>
+      <div class="bar-chart">
+        ${Object.entries(vByStatus).sort((a,b)=>b[1]-a[1]).map(([s,c])=>`
+          <div class="bar-row">
+            <div class="bar-label">${s}</div>
+            <div class="bar-track"><div class="bar-fill" style="width:${Math.round(c/maxVStat*100)}%;background:${s==='Available'?'var(--success)':s==='Damaged'?'var(--danger)':s==='In Transit'?'var(--accent)':'var(--warning)'}"></div></div>
+            <div class="bar-value">${c}</div>
+          </div>`).join('')}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><h3>🏭 Supplier Performance</h3></div>
+      <div class="bar-chart">
+        ${suppliers.map(s=>`
+          <div class="bar-row">
+            <div class="bar-label" style="width:140px" title="${s.name}">${s.name.split(' ').slice(0,2).join(' ')}</div>
+            <div class="bar-track">
+              <div class="bar-fill" style="width:${s.onTime}%;background:${s.onTime>=85?'var(--success)':s.onTime>=70?'var(--warning)':'var(--danger)'}"></div>
+            </div>
+            <div class="bar-value">${s.onTime}%</div>
+          </div>`).join('')}
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><h3>📋 Summary Report</h3>
+      <button class="btn btn-secondary btn-sm" onclick="exportCSV()">⬇ Export CSV</button>
+    </div>
+    <div class="grid-3" style="gap:16px">
+      <div>
+        <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px;text-transform:uppercase">VEHICLE SUMMARY</div>
+        ${Object.entries(vByStatus).map(([s,c])=>`<div style="display:flex;justify-content:space-between;font-size:13px;padding:4px 0;border-bottom:1px solid var(--border)"><span>${s}</span><strong>${c}</strong></div>`).join('')}
+        <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;font-weight:700"><span>Total</span><strong>${vehicles.length}</strong></div>
+      </div>
+      <div>
+        <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px;text-transform:uppercase">PARTS SUMMARY</div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;padding:4px 0;border-bottom:1px solid var(--border)"><span>Total SKUs</span><strong>${parts.length}</strong></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;padding:4px 0;border-bottom:1px solid var(--border)"><span>Low Stock</span><strong style="color:var(--warning)">${parts.filter(p=>p.qty>0&&p.qty<p.minQty).length}</strong></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;padding:4px 0;border-bottom:1px solid var(--border)"><span>Out of Stock</span><strong style="color:var(--danger)">${parts.filter(p=>p.qty===0).length}</strong></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;padding:4px 0"><span>Total Value</span><strong>₹${(totalPartsValue/100000).toFixed(1)}L</strong></div>
+      </div>
+      <div>
+        <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px;text-transform:uppercase">OPERATIONS</div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;padding:4px 0;border-bottom:1px solid var(--border)"><span>Active Shipments</span><strong>${shipments.filter(s=>s.status!=='Delivered').length}</strong></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;padding:4px 0;border-bottom:1px solid var(--border)"><span>Delayed Shipments</span><strong style="color:var(--danger)">${shipments.filter(s=>s.status==='Delayed').length}</strong></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;padding:4px 0;border-bottom:1px solid var(--border)"><span>Damage Reports</span><strong style="color:var(--warning)">${damages.length}</strong></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;padding:4px 0"><span>Pending Allocations</span><strong>${allocs.filter(a=>a.status==='Pending').length}</strong></div>
+      </div>
+    </div>
+  </div>`;
+  document.getElementById('main-content').innerHTML=html;
+}
+
+function csvEscape(val){
+  const s=String(val==null?'':val).replace(/"/g,'""').replace(/\r?\n/g,' ');
+  return`"${s}"`;
+}
+function exportCSV(){
+  const vehicles=getTable('vehicles');
+  const headers=['VIN','Model','Variant','Color','Location','Status','Received Date','Price'];
+  const rows=vehicles.map(v=>[v.vin,v.model,v.variant,v.color,v.location,v.status,v.receivedDate,v.price]);
+  const csv=[headers,...rows].map(r=>r.map(csvEscape).join(',')).join('\r\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='AIVTS_Vehicles_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();URL.revokeObjectURL(url);
+  showToast('CSV exported successfully','success');
+  addAuditLog('EXPORT_CSV','Vehicle data exported to CSV');
+}
+</script>
+
+<script>
+// ============================================================
+// MODULE: USER ROLES & AUDIT LOGS
+// ============================================================
+function renderUserRoles(){
+  const logs=getTable('auditlogs').slice().reverse();
+  const users=Object.entries(USERS).map(([key,u])=>({key,...u}));
+
+  const html=`
+  <div class="module-header">
+    <h2>🔐 User Roles &amp; Audit Logs</h2>
+    <p>User access control, role management, and complete system audit trail</p>
+  </div>
+
+  <div class="grid-2" style="margin-bottom:20px">
+    <div class="card">
+      <div class="card-header"><h3>👥 User Accounts</h3></div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Name</th><th>Role</th><th>Email</th><th>Status</th></tr></thead>
+        <tbody>
+          ${users.map(u=>`<tr>
+            <td><strong>${u.name}</strong></td>
+            <td>${u.role}</td>
+            <td><code style="font-size:11px">${u.email}</code></td>
+            <td><span class="badge badge-success">Active</span></td>
+          </tr>`).join('')}
+        </tbody>
+      </table></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><h3>🔑 Role Permissions</h3></div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Role</th><th>View</th><th>Edit</th><th>Delete</th><th>Admin</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Administrator</strong></td><td>✅</td><td>✅</td><td>✅</td><td>✅</td></tr>
+          <tr><td><strong>Operations Manager</strong></td><td>✅</td><td>✅</td><td>❌</td><td>❌</td></tr>
+          <tr><td><strong>Warehouse Executive</strong></td><td>✅</td><td>✅</td><td>❌</td><td>❌</td></tr>
+          <tr><td><strong>Data Analyst</strong></td><td>✅</td><td>❌</td><td>❌</td><td>❌</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h3>📝 System Audit Log</h3>
+      <div class="card-actions">
+        <span style="font-size:12px;color:var(--text2)">${logs.length} entries</span>
+        <button class="btn btn-secondary btn-sm" onclick="clearAuditLogs()">Clear Old Logs</button>
+        <button class="btn btn-secondary btn-sm" onclick="exportAuditLog()">⬇ Export</button>
+      </div>
+    </div>
+    ${makeTable(
+      ['Timestamp','User','Role','Action','Detail','Extra Info'],
+      logs.slice(0,100).map(l=>[
+        `<span style="font-size:11px;color:var(--text2)">${fmtDateTime(l.timestamp)}</span>`,
+        l.user,
+        `<span class="tag">${l.role}</span>`,
+        `<code style="font-size:11px;color:var(--accent)">${l.action}</code>`,
+        l.detail,
+        l.extra?`<span style="font-size:11px;color:var(--text2)">${l.extra}</span>`:'—'
+      ]),'No audit logs found'
+    )}
+  </div>`;
+  document.getElementById('main-content').innerHTML=html;
+}
+
+function clearAuditLogs(){
+  confirm2('Clear audit logs older than 30 days?',function(){
+    const cutoff=new Date(Date.now()-30*86400000).toISOString();
+    const logs=getTable('auditlogs').filter(l=>l.timestamp>cutoff);
+    setTable('auditlogs',logs);
+    showToast('Old audit logs cleared','success');
+    renderUserRoles();
+  });
+}
+
+function exportAuditLog(){
+  const logs=getTable('auditlogs');
+  const headers=['Timestamp','User','Role','Action','Detail','Extra'];
+  const rows=logs.map(l=>[l.timestamp,l.user,l.role,l.action,l.detail,l.extra||'']);
+  const csv=[headers,...rows].map(r=>r.map(csvEscape).join(',')).join('\r\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='AIVTS_AuditLog_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();URL.revokeObjectURL(url);
+  showToast('Audit log exported','success');
+}
+</script>
+
+<script>
+// ============================================================
+// MODULE: DATA IMPORT & COMPANY ANALYSIS
+// ============================================================
+
+// Loaded SheetJS flag
+let _xlsxReady = false;
+
+// State: currently loaded dataset
+let _diData = { rows: [], headers: [], fileName: '', format: '', valid: false };
+
+// ---- Column alias mapping for flexible validation ----
+const DI_REQUIRED_COLS = [
+  { key: 'company_name',  aliases: ['company_name','company name','name','company','organization','org_name','companyname'] },
+  { key: 'industry',      aliases: ['industry','sector','category','business_type','business type','vertical','segment'] },
+  { key: 'revenue',       aliases: ['revenue','annual_revenue','annual revenue','sales','turnover','income','revenues','net_revenue'] },
+  { key: 'employee_count',aliases: ['employee_count','employees','headcount','staff','workforce','num_employees','employee count','total_employees','numberofemployees'] },
+  { key: 'founding_year', aliases: ['founding_year','founded','year_founded','established','year established','incorporation_year','yearfounded'] },
+  { key: 'location',      aliases: ['location','city','headquarters','hq','region','country','place','office','base'] }
+];
+
+const DI_OPTIONAL_COLS = ['headquarters','website','ceo','stock_symbol','market_cap','description','phone','email','revenue_growth','profit_margin'];
+
+function diNorm(s){ return String(s||'').toLowerCase().replace(/[\s_\-]/g,''); }
+
+function diMapHeaders(rawHeaders){
+  const norm = rawHeaders.map(h=>diNorm(h));
+  const map = {};
+  DI_REQUIRED_COLS.forEach(rc=>{
+    const found = rc.aliases.find(a=>norm.includes(diNorm(a)));
+    map[rc.key] = found ? rawHeaders[norm.indexOf(diNorm(found))] : null;
+  });
+  return map;
+}
+
+// ---- CSV Parser ----
+function parseCSV(text){
+  const lines = text.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n').filter(l=>l.trim()!=='');
+  if(!lines.length) return {error:'File is empty.'};
+  const headers = parseCSVRow(lines[0]);
+  const rows = [];
+  const parseErrors = [];
+  for(let i=1;i<lines.length;i++){
+    if(!lines[i].trim()) continue;
+    const cells = parseCSVRow(lines[i]);
+    if(cells.length !== headers.length){
+      parseErrors.push(`Row ${i+1}: expected ${headers.length} columns, got ${cells.length}`);
+      if(parseErrors.length>3) break;
+      continue;
+    }
+    const obj={};
+    headers.forEach((h,j)=>{ obj[h]=cells[j]; });
+    rows.push(obj);
+  }
+  return {headers, rows, parseErrors};
+}
+function parseCSVRow(line){
+  const cols=[];
+  let cur='',inQ=false;
+  for(let i=0;i<line.length;i++){
+    const ch=line[i];
+    if(ch==='"'&&inQ&&line[i+1]==='"'){cur+='"';i++;}
+    else if(ch==='"'){inQ=!inQ;}
+    else if(ch===','&&!inQ){cols.push(cur.trim());cur='';}
+    else cur+=ch;
+  }
+  cols.push(cur.trim());
+  return cols;
+}
+
+// ---- JSON Parser ----
+function parseJSON(text){
+  let parsed;
+  try{ parsed = JSON.parse(text); }
+  catch(e){ return {error:'Invalid JSON: '+e.message}; }
+  let rows;
+  if(Array.isArray(parsed)){ rows = parsed; }
+  else if(typeof parsed==='object'){
+    const arrKey = ['companies','data','records','items','rows','results','companies_list'].find(k=>Array.isArray(parsed[k]));
+    if(arrKey){ rows = parsed[arrKey]; }
+    else{
+      const anyArr = Object.keys(parsed).find(k=>Array.isArray(parsed[k]));
+      if(anyArr){ rows = parsed[anyArr]; }
+      else{ return {error:'JSON must contain an array of objects at the top level or inside a "companies", "data", or "records" key.'}; }
+    }
+  } else { return {error:'JSON root must be an object or array.'}; }
+  if(!rows.length) return {error:'JSON array is empty.'};
+  if(typeof rows[0]!=='object'||Array.isArray(rows[0])) return {error:'JSON array must contain objects (key-value records).'};
+  const headers = [...new Set(rows.flatMap(r=>Object.keys(r)))];
+  rows = rows.map(r=>{ const o={}; headers.forEach(h=>{o[h]=r[h]!==undefined?r[h]:''}); return o; });
+  return {headers, rows, parseErrors:[]};
+}
+
+// ---- XLSX Parser (requires SheetJS) ----
+function parseXLSX(arrayBuffer){
+  if(!window.XLSX) return {error:'Excel parsing library not loaded. Check your internet connection and retry.'};
+  try{
+    const wb = XLSX.read(arrayBuffer, {type:'array'});
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const data = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+    if(!data.length) return {error:'Excel sheet is empty.'};
+    const headers = data[0].map(h=>String(h));
+    const rows = [];
+    for(let i=1;i<data.length;i++){
+      if(data[i].every(c=>c===''||c===null||c===undefined)) continue;
+      const obj={};
+      headers.forEach((h,j)=>{ obj[h]=data[i][j]!==undefined?data[i][j]:''; });
+      rows.push(obj);
+    }
+    return {headers, rows, parseErrors:[]};
+  }catch(e){ return {error:'Failed to parse Excel file: '+e.message}; }
+}
+
+// ---- Parquet Parser (uses hyparquet from CDN) ----
+async function parseParquet(arrayBuffer){
+  if(!window.hyparquet){
+    try{
+      await new Promise((resolve,reject)=>{
+        const s=document.createElement('script');
+        s.src='https://cdn.jsdelivr.net/npm/hyparquet@1/dist/hyparquet.min.js';
+        s.onload=resolve; s.onerror=reject;
+        document.head.appendChild(s);
+      });
+    }catch(e){
+      return {error:'Could not load Parquet parser (requires internet). Please convert the file to CSV or JSON first, or ensure you have an internet connection.'};
+    }
+  }
+  try{
+    const asyncBuffer = {
+      byteLength: arrayBuffer.byteLength,
+      slice: (s,e) => Promise.resolve(arrayBuffer.slice(s,e))
+    };
+    const rows = await hyparquet.parquetReadObjects({file: asyncBuffer});
+    if(!rows||!rows.length) return {error:'Parquet file is empty.'};
+    const headers = Object.keys(rows[0]);
+    return {headers, rows: rows.map(r=>{ const o={}; headers.forEach(h=>{ o[h]=r[h]!==undefined?r[h]:''; }); return o; }), parseErrors:[]};
+  }catch(e){ return {error:'Failed to parse Parquet file: '+e.message}; }
+}
+
+// ---- Validation ----
+function diValidate(rows, headers){
+  const hmap = diMapHeaders(headers);
+  const results = [];
+  let allRequired = true;
+
+  DI_REQUIRED_COLS.forEach(rc=>{
+    const col = hmap[rc.key];
+    if(!col){
+      results.push({status:'fail', label:`Required column: "${rc.key.replace(/_/g,' ')}"`, detail:'Not found. Accepted names: '+rc.aliases.slice(0,4).join(', ')+'…'});
+      allRequired=false;
+    } else {
+      const vals = rows.map(r=>r[col]).filter(v=>v!==''&&v!==null&&v!==undefined);
+      if(vals.length===0){
+        results.push({status:'fail', label:`Column "${col}"`, detail:'All values are empty.'});
+        allRequired=false;
+      } else {
+        const isNumCol = ['revenue','employee_count','founding_year'].includes(rc.key);
+        if(isNumCol){
+          const badVals = vals.filter(v=>isNaN(Number(v)));
+          if(badVals.length>vals.length*0.3){
+            results.push({status:'warn', label:`Column "${col}"`, detail:`${badVals.length} of ${vals.length} values are non-numeric. Expected numbers for this field.`});
+          } else {
+            results.push({status:'pass', label:`Column "${col}"`, detail:`${vals.length} valid values (numeric ✓)`});
+          }
+        } else {
+          results.push({status:'pass', label:`Column "${col}"`, detail:`${vals.length} valid values`});
+        }
+      }
+    }
+  });
+
+  if(rows.length===0){
+    results.push({status:'fail', label:'Row count', detail:'File contains no data rows.'});
+    allRequired=false;
+  } else if(rows.length<2){
+    results.push({status:'warn', label:'Row count', detail:`Only ${rows.length} data row found. Add more records for meaningful analysis.`});
+  } else {
+    results.push({status:'pass', label:'Row count', detail:`${rows.length} data rows found`});
+  }
+
+  const optFound = DI_OPTIONAL_COLS.filter(o=>headers.some(h=>diNorm(h)===diNorm(o)));
+  if(optFound.length>0){
+    results.push({status:'pass', label:'Optional columns', detail:`Detected: ${optFound.join(', ')}`});
+  }
+
+  return {results, hmap, valid:allRequired};
+}
+
+// ---- Render Module ----
+function renderDataImport(){
+  _diData = { rows:[], headers:[], fileName:'', format:'', valid:false };
+  const html=`
+  <div class="module-header">
+    <h2>📥 Data Import &amp; Company Analysis</h2>
+    <p>Load company datasets in CSV, Excel (XLSX), JSON, or Parquet format for analysis and insights</p>
+  </div>
+
+  <div class="card" id="di-upload-card">
+    <div class="card-header"><h3>📂 Load Dataset</h3><span style="font-size:12px;color:var(--text2)">Drag &amp; drop or click to browse</span></div>
+    <div id="di-drop-zone" class="drop-zone"
+         onclick="document.getElementById('di-file-input').click()"
+         ondragover="event.preventDefault();this.classList.add('drag-over')"
+         ondragleave="this.classList.remove('drag-over')"
+         ondrop="diHandleDrop(event)">
+      <div class="dz-icon">📁</div>
+      <div class="dz-title">Drop your file here, or click to browse</div>
+      <div class="dz-sub">Supported: CSV &nbsp;·&nbsp; Excel (.xlsx / .xls) &nbsp;·&nbsp; JSON &nbsp;·&nbsp; Parquet (.parquet)</div>
+    </div>
+    <input type="file" id="di-file-input" style="display:none" accept=".csv,.xlsx,.xls,.json,.parquet" onchange="diHandleSelect(event)">
+    <div class="fmt-grid" style="margin-top:20px">
+      <div class="fmt-card">
+        <div class="fmt-icon">📄</div>
+        <div class="fmt-name">CSV</div>
+        <div class="fmt-desc">Comma-separated values. Works fully offline.</div>
+      </div>
+      <div class="fmt-card">
+        <div class="fmt-icon">📊</div>
+        <div class="fmt-name">Excel</div>
+        <div class="fmt-desc">.xlsx / .xls workbooks. Reads first sheet automatically.</div>
+      </div>
+      <div class="fmt-card">
+        <div class="fmt-icon">{ }</div>
+        <div class="fmt-name">JSON</div>
+        <div class="fmt-desc">Array or wrapped object. Works fully offline.</div>
+      </div>
+      <div class="fmt-card">
+        <div class="fmt-icon">🗜️</div>
+        <div class="fmt-name">Parquet</div>
+        <div class="fmt-desc">Columnar binary format. Requires internet to load parser on first use.</div>
+      </div>
+    </div>
+    <div style="margin-top:14px;padding:12px;background:rgba(67,110,224,.04);border-radius:8px;font-size:12px;color:var(--text2)">
+      <strong style="color:var(--text)">Required columns:</strong>&nbsp; company_name &nbsp;·&nbsp; industry &nbsp;·&nbsp; revenue &nbsp;·&nbsp; employee_count &nbsp;·&nbsp; founding_year &nbsp;·&nbsp; location
+      &nbsp;&nbsp;<a href="#" onclick="diShowColumnHelp();return false" style="color:var(--accent)">Column naming guide →</a>
+    </div>
+  </div>
+
+  <div id="di-result-area"></div>`;
+  document.getElementById('main-content').innerHTML=html;
+}
+
+function diShowColumnHelp(){
+  showModal(`<div class="modal-box" style="max-width:680px">
+    <h3>📋 Column Naming Guide</h3>
+    <p style="color:var(--text2);font-size:13px;margin-bottom:16px">The import module recognises flexible column name variations. Use any of these in your file:</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Required Field</th><th>Accepted Column Names</th><th>Type</th></tr></thead>
+      <tbody>
+        ${DI_REQUIRED_COLS.map(rc=>`<tr>
+          <td><strong>${rc.key}</strong></td>
+          <td style="font-size:11px">${rc.aliases.join(', ')}</td>
+          <td style="font-size:12px;color:var(--text2)">${['revenue','employee_count','founding_year'].includes(rc.key)?'Number':'Text'}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table></div>
+    <div style="margin-top:14px;font-size:12px;color:var(--text2)">
+      <strong>Optional columns</strong> (detected automatically if present): ${DI_OPTIONAL_COLS.join(', ')}
+    </div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal()">Close</button></div>
+  </div>`);
+}
+
+// ---- File Handlers ----
+function diHandleDrop(ev){
+  ev.preventDefault();
+  document.getElementById('di-drop-zone').classList.remove('drag-over');
+  const f = ev.dataTransfer.files[0];
+  if(f) diProcessFile(f);
+}
+function diHandleSelect(ev){
+  const f = ev.target.files[0];
+  if(f) diProcessFile(f);
+  ev.target.value='';
+}
+
+function diProcessFile(file){
+  const name = file.name;
+  const ext  = name.split('.').pop().toLowerCase();
+  const validExts = ['csv','xlsx','xls','json','parquet'];
+  if(!validExts.includes(ext)){
+    diShowError([`Unsupported file type ".${ext}". Please upload a CSV, Excel (.xlsx / .xls), JSON, or Parquet file.`]);
+    return;
+  }
+  document.getElementById('di-result-area').innerHTML=`<div class="card"><div style="text-align:center;padding:32px;color:var(--text2)">⏳ Parsing <strong>${name}</strong>…</div></div>`;
+
+  const reader = new FileReader();
+
+  if(ext==='csv'){
+    reader.onload = e => { const r=parseCSV(e.target.result); diAfterParse(r,name,'CSV'); };
+    reader.readAsText(file,'UTF-8');
+  } else if(ext==='json'){
+    reader.onload = e => { const r=parseJSON(e.target.result); diAfterParse(r,name,'JSON'); };
+    reader.readAsText(file,'UTF-8');
+  } else if(ext==='xlsx'||ext==='xls'){
+    reader.onload = async e => {
+      if(!window.XLSX){
+        document.getElementById('di-result-area').innerHTML=`<div class="card"><div style="text-align:center;padding:24px;color:var(--text2)">📦 Loading Excel parser from CDN… (requires internet)</div></div>`;
+        await new Promise((res,rej)=>{
+          const s=document.createElement('script');
+          s.src='https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.mini.min.js';
+          s.onload=res; s.onerror=()=>rej(new Error('CDN unavailable'));
+          document.head.appendChild(s);
+        }).catch(()=>{});
+      }
+      const r=parseXLSX(e.target.result);
+      diAfterParse(r,name,'Excel');
+    };
+    reader.readAsArrayBuffer(file);
+  } else if(ext==='parquet'){
+    reader.onload = async e => {
+      document.getElementById('di-result-area').innerHTML=`<div class="card"><div style="text-align:center;padding:24px;color:var(--text2)">📦 Loading Parquet parser from CDN… (requires internet)</div></div>`;
+      const r = await parseParquet(e.target.result);
+      diAfterParse(r,name,'Parquet');
+    };
+    reader.readAsArrayBuffer(file);
+  }
+}
+
+function diAfterParse(result, fileName, format){
+  if(result.error){
+    diShowError([`Parse error: ${result.error}`]);
+    return;
+  }
+  if(result.parseErrors && result.parseErrors.length){
+    showToast(`⚠️ ${result.parseErrors.length} row(s) skipped (column count mismatch)`, 'warning', 5000);
+  }
+  _diData.rows    = result.rows;
+  _diData.headers = result.headers;
+  _diData.fileName= fileName;
+  _diData.format  = format;
+  _diData.valid   = false;
+
+  const validation = diValidate(result.rows, result.headers);
+  _diData.hmap  = validation.hmap;
+  _diData.valid = validation.valid;
+
+  diRenderValidationAndPreview(validation, result.rows, result.headers, fileName, format);
+  addAuditLog('DATA_IMPORT_LOAD', `File loaded: ${fileName} (${format}, ${result.rows.length} rows)`);
+}
+
+function diShowError(msgs){
+  document.getElementById('di-result-area').innerHTML=`
+  <div class="di-error-box">
+    <div style="font-weight:700;font-size:14px;color:var(--danger)">❌ File Load Error</div>
+    <ul>${msgs.map(m=>`<li>${m}</li>`).join('')}</ul>
+    <div style="margin-top:10px;font-size:12px;color:var(--text2)">Please fix the issue and upload the file again, or check the <a href="#" onclick="diShowColumnHelp();return false" style="color:var(--accent)">column naming guide</a>.</div>
+  </div>`;
+}
+
+function diRenderValidationAndPreview(validation, rows, headers, fileName, format){
+  const {results, hmap, valid} = validation;
+  const passCount  = results.filter(r=>r.status==='pass').length;
+  const failCount  = results.filter(r=>r.status==='fail').length;
+  const warnCount  = results.filter(r=>r.status==='warn').length;
+
+  const statusIcon = {pass:'✅',fail:'❌',warn:'⚠️'};
+  const previewRows = rows.slice(0,10);
+
+  const html=`
+  <div class="card">
+    <div class="card-header">
+      <h3>🔍 Validation Results</h3>
+      <div style="display:flex;align-items:center;gap:12px;font-size:12px">
+        <span style="color:var(--text2)">${fileName} &nbsp;·&nbsp; ${format} &nbsp;·&nbsp; ${rows.length} rows &nbsp;·&nbsp; ${headers.length} cols</span>
+        <span style="color:var(--success)">✅ ${passCount}</span>
+        <span style="color:var(--warning)">⚠️ ${warnCount}</span>
+        <span style="color:var(--danger)">❌ ${failCount}</span>
+      </div>
+    </div>
+    ${!valid?`<div class="di-error-box" style="margin-bottom:12px">
+      <div style="font-weight:700;color:var(--danger)">⛔ Required columns are missing — fix the errors below before you can run analysis.</div>
+      <div style="font-size:12px;color:var(--text2);margin-top:6px">Tip: Check the <a href="#" onclick="diShowColumnHelp();return false" style="color:var(--accent)">column naming guide</a> for accepted column name variations.</div>
+    </div>`:''}
+    ${results.map(r=>`
+      <div class="val-row ${r.status}">
+        <span class="val-icon">${statusIcon[r.status]}</span>
+        <span class="val-label">${r.label}</span>
+        <span class="val-detail">${r.detail}</span>
+      </div>`).join('')}
+    <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn btn-secondary btn-sm" onclick="diTogglePreview()">👁️ Toggle Data Preview</button>
+      ${valid?`<button class="btn btn-primary" onclick="diImportAndAnalyse()">📊 Import &amp; Analyse</button>`:''}
+      <button class="btn btn-secondary btn-sm" onclick="renderDataImport()">↩ Load Another File</button>
+    </div>
+  </div>
+
+  <div class="card" id="di-preview-card">
+    <div class="card-header">
+      <h3>👁️ Data Preview</h3>
+      <span style="font-size:12px;color:var(--text2)">Showing first ${previewRows.length} of ${rows.length} rows</span>
+    </div>
+    <div class="preview-wrap">
+      <table>
+        <thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead>
+        <tbody>
+          ${previewRows.map(row=>`<tr>${headers.map(h=>{
+            const v=row[h];
+            const disp = (v!==undefined&&v!=='')?String(v):'';
+            return `<td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${disp.replace(/"/g,'&quot;')}">${disp||'<span style="color:var(--text2)">—</span>'}</td>`;
+          }).join('')}</tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="di-analysis-area"></div>`;
+
+  document.getElementById('di-result-area').innerHTML=html;
+}
+
+function diTogglePreview(){
+  const card=document.getElementById('di-preview-card');
+  if(card) card.style.display=card.style.display==='none'?'':'none';
+}
+
+// ---- Analysis ----
+function diImportAndAnalyse(){
+  if(!_diData.valid||!_diData.rows.length){ showToast('Cannot analyse — fix validation errors first','error'); return; }
+  const {rows,hmap} = _diData;
+
+  function getVal(row,key){ const c=hmap[key]; return c?row[c]:null; }
+
+  const allCompanies = rows.map(r=>({
+    name:     String(getVal(r,'company_name')||'Unknown'),
+    industry: String(getVal(r,'industry')||'Unknown'),
+    revenue:  Number(getVal(r,'revenue'))||0,
+    employees:Number(getVal(r,'employee_count'))||0,
+    founded:  Number(getVal(r,'founding_year'))||0,
+    location: String(getVal(r,'location')||'Unknown')
+  }));
+
+  const total    = allCompanies.length;
+  const totalRev = allCompanies.reduce((s,c)=>s+c.revenue,0);
+  const avgRev   = total?Math.round(totalRev/total):0;
+  const totalEmp = allCompanies.reduce((s,c)=>s+c.employees,0);
+  const avgEmp   = total?Math.round(totalEmp/total):0;
+  const foundedYrs = allCompanies.map(c=>c.founded).filter(y=>y>1800&&y<=new Date().getFullYear());
+  const avgFounded = foundedYrs.length?Math.round(foundedYrs.reduce((s,y)=>s+y,0)/foundedYrs.length):0;
+
+  // Industry distribution
+  const indMap={};
+  allCompanies.forEach(c=>{ indMap[c.industry]=(indMap[c.industry]||0)+1; });
+  const indSorted = Object.entries(indMap).sort((a,b)=>b[1]-a[1]);
+  const maxInd = indSorted[0]?indSorted[0][1]:1;
+
+  // Revenue brackets
+  const revBrackets=[
+    {label:'< $100M',   min:0,          max:100000000},
+    {label:'$100M–$1B', min:100000000,  max:1000000000},
+    {label:'$1B–$5B',   min:1000000000, max:5000000000},
+    {label:'> $5B',     min:5000000000, max:Infinity}
+  ];
+  const revDist = revBrackets.map(b=>({...b, count:allCompanies.filter(c=>c.revenue>=b.min&&c.revenue<b.max).length}));
+  const maxRev  = Math.max(...revDist.map(b=>b.count),1);
+
+  // Employee distribution
+  const empBrackets=[
+    {label:'< 1,000',  min:0,     max:1000},
+    {label:'1K–10K',   min:1000,  max:10000},
+    {label:'10K–50K',  min:10000, max:50000},
+    {label:'> 50K',    min:50000, max:Infinity}
+  ];
+  const empDist = empBrackets.map(b=>({...b, count:allCompanies.filter(c=>c.employees>=b.min&&c.employees<b.max).length}));
+  const maxEmpD = Math.max(...empDist.map(b=>b.count),1);
+
+  // Location distribution
+  const locMap={};
+  allCompanies.forEach(c=>{
+    const loc = c.location.split(',')[0].trim();
+    locMap[loc]=(locMap[loc]||0)+1;
+  });
+  const locSorted = Object.entries(locMap).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const maxLoc = locSorted[0]?locSorted[0][1]:1;
+
+  // Top companies by revenue
+  const topRevenue = [...allCompanies].sort((a,b)=>b.revenue-a.revenue).slice(0,5);
+
+  // Oldest and newest
+  const withYears = allCompanies.filter(c=>c.founded>1800);
+  const oldest = withYears.length?withYears.reduce((a,b)=>a.founded<b.founded?a:b):null;
+  const newest = withYears.length?withYears.reduce((a,b)=>a.founded>b.founded?a:b):null;
+
+  function fmtRev(n){
+    if(n>=1e9) return '$'+(n/1e9).toFixed(1)+'B';
+    if(n>=1e6) return '$'+(n/1e6).toFixed(1)+'M';
+    if(n>=1e3) return '$'+(n/1e3).toFixed(1)+'K';
+    return '$'+n;
+  }
+
+  const html=`
+  <div class="card">
+    <div class="card-header">
+      <h3>📊 Company Analysis — ${_diData.fileName}</h3>
+      <div class="card-actions">
+        <button class="btn btn-secondary btn-sm" onclick="diExportAnalysis()">⬇ Export CSV</button>
+        <button class="btn btn-secondary btn-sm" onclick="renderDataImport()">↩ Load New File</button>
+      </div>
+    </div>
+
+    <div class="grid-4" style="margin-bottom:20px">
+      <div class="stat-mini"><div class="sm-val">${total}</div><div class="sm-lbl">Companies</div></div>
+      <div class="stat-mini"><div class="sm-val">${indSorted.length}</div><div class="sm-lbl">Industries</div></div>
+      <div class="stat-mini"><div class="sm-val">${fmtRev(avgRev)}</div><div class="sm-lbl">Avg Revenue</div></div>
+      <div class="stat-mini"><div class="sm-val">${avgEmp.toLocaleString()}</div><div class="sm-lbl">Avg Employees</div></div>
+    </div>
+
+    <div class="grid-2" style="margin-bottom:20px">
+      <div>
+        <div style="font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Industry Distribution</div>
+        <div class="bar-chart">
+          ${indSorted.slice(0,10).map(([ind,cnt])=>`
+            <div class="bar-row">
+              <div class="bar-label" style="width:160px" title="${ind}">${ind.length>22?ind.slice(0,21)+'…':ind}</div>
+              <div class="bar-track"><div class="bar-fill" style="width:${Math.round(cnt/maxInd*100)}%"></div></div>
+              <div class="bar-value">${cnt}</div>
+            </div>`).join('')}
+        </div>
+      </div>
+      <div>
+        <div style="font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Geographic Distribution</div>
+        <div class="bar-chart">
+          ${locSorted.map(([loc,cnt])=>`
+            <div class="bar-row">
+              <div class="bar-label" style="width:130px">${loc}</div>
+              <div class="bar-track"><div class="bar-fill" style="width:${Math.round(cnt/maxLoc*100)}%;background:var(--success)"></div></div>
+              <div class="bar-value">${cnt}</div>
+            </div>`).join('')}
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-2" style="margin-bottom:20px">
+      <div>
+        <div style="font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Revenue Distribution</div>
+        <div class="bar-chart">
+          ${revDist.map(b=>`
+            <div class="bar-row">
+              <div class="bar-label" style="width:130px">${b.label}</div>
+              <div class="bar-track"><div class="bar-fill" style="width:${Math.round(b.count/maxRev*100)}%;background:var(--warning)"></div></div>
+              <div class="bar-value">${b.count}</div>
+            </div>`).join('')}
+        </div>
+      </div>
+      <div>
+        <div style="font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Employee Scale</div>
+        <div class="bar-chart">
+          ${empDist.map(b=>`
+            <div class="bar-row">
+              <div class="bar-label" style="width:130px">${b.label}</div>
+              <div class="bar-track"><div class="bar-fill" style="width:${Math.round(b.count/maxEmpD*100)}%;background:var(--info)"></div></div>
+              <div class="bar-value">${b.count}</div>
+            </div>`).join('')}
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-bottom:20px">
+      <div style="font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Top 5 Companies by Revenue</div>
+      ${makeTable(
+        ['Rank','Company Name','Industry','Revenue','Employees','Founded'],
+        topRevenue.map((c,i)=>[
+          `<span style="font-weight:700;color:var(--accent)">#${i+1}</span>`,
+          `<strong>${c.name}</strong>`,
+          `<span class="tag">${c.industry}</span>`,
+          `<span style="color:var(--success);font-weight:700">${fmtRev(c.revenue)}</span>`,
+          c.employees.toLocaleString(),
+          c.founded||'—'
+        ])
+      )}
+    </div>
+
+    <div style="padding:14px;background:rgba(67,110,224,.05);border-radius:10px;font-size:13px">
+      <div style="font-weight:700;margin-bottom:8px;color:var(--text)">💡 Key Insights</div>
+      <ul style="padding-left:20px;color:var(--text2);line-height:1.9">
+        <li>Total combined revenue: <strong style="color:var(--text)">${fmtRev(totalRev)}</strong></li>
+        <li>Total combined workforce: <strong style="color:var(--text)">${totalEmp.toLocaleString()} employees</strong></li>
+        <li>Dominant industry: <strong style="color:var(--text)">${indSorted[0]?indSorted[0][0]+' ('+indSorted[0][1]+' companies)':'—'}</strong></li>
+        <li>Most common HQ city: <strong style="color:var(--text)">${locSorted[0]?locSorted[0][0]+' ('+locSorted[0][1]+' companies)':'—'}</strong></li>
+        ${oldest?`<li>Oldest company: <strong style="color:var(--text)">${oldest.name}</strong> (founded ${oldest.founded})</li>`:''}
+        ${newest?`<li>Newest company: <strong style="color:var(--text)">${newest.name}</strong> (founded ${newest.founded})</li>`:''}
+        ${avgFounded?`<li>Average founding year: <strong style="color:var(--text)">${avgFounded}</strong></li>`:''}
+      </ul>
+    </div>
+  </div>`;
+
+  document.getElementById('di-analysis-area').innerHTML=html;
+  document.getElementById('di-analysis-area').scrollIntoView({behavior:'smooth',block:'start'});
+  addAuditLog('DATA_IMPORT_ANALYSE', `Analysis run: ${_diData.fileName}, ${total} companies, ${indSorted.length} industries`);
+  showToast('Analysis complete ✅','success');
+}
+
+function diExportAnalysis(){
+  const {rows, headers, fileName} = _diData;
+  if(!rows.length){ showToast('No data to export','error'); return; }
+  const csv = [headers, ...rows.map(r=>headers.map(h=>r[h]))].map(r=>r.map(csvEscape).join(',')).join('\r\n');
+  const blob = new Blob([csv],{type:'text/csv'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href=url; a.download='AIVTS_ImportedData_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click(); URL.revokeObjectURL(url);
+  showToast('Data exported to CSV','success');
+  addAuditLog('DATA_IMPORT_EXPORT',`Imported dataset exported: ${fileName}`);
+}
+
+// ============================================================
+// MODULE ROUTER
+// ============================================================
+const MODULES = {
+  dashboard: renderDashboard,
+  vehicle:   renderVehicle,
+  parts:     renderParts,
+  transit:   renderTransit,
+  audit:     renderAudit,
+  reorder:   renderReorder,
+  aging:     renderAging,
+  damage:    renderDamage,
+  supplier:  renderSupplier,
+  allocation:renderAllocation,
+  alerts:    renderAlerts,
+  reports:   renderReports,
+  userroles: renderUserRoles,
+  dataimport:renderDataImport
+};
+
+// ============================================================
+// DATA RESET UTILITY
+// ============================================================
+function resetAllData(){
+  confirm2('⚠️ This will permanently DELETE ALL data. Are you sure?',function(){
+    localStorage.removeItem(DB_KEY);
+    showToast('All data cleared','info');
+    setModule('dashboard');
+  });
+}
+</script>
+
+<!-- Reset button in sidebar footer -->
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+  const sidebar=document.getElementById('sidebar');
+  if(sidebar){
+    const footer=document.createElement('div');
+    footer.style.cssText='padding:16px 12px;border-top:1px solid var(--border);margin-top:8px';
+    footer.innerHTML=`<button class="btn btn-secondary btn-sm" style="width:100%;font-size:11px" onclick="resetAllData()">🗑️ Clear All Data</button>
+    <div style="text-align:center;font-size:10px;color:var(--text2);margin-top:8px">AIVTS — Enterprise<br>Data: Browser localStorage</div>`;
+    sidebar.appendChild(footer);
+  }
+});
+</script>
+</body>
+</html>
